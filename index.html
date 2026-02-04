@@ -23,7 +23,7 @@
     <!-- Video Player Section -->
     <section id="video" class="video-section">
         <div class="video-container" id="video-container">
-            <img src="assets/Loading-Schedule.png" alt="Loading schedule..." id="video-placeholder" style="width: 100%; height: 100%; object-fit: cover;">
+            <img src="assets/Loading-Schedule.png" alt="Loading schedule..." id="video-placeholder">
         </div>
     </section>
 
@@ -157,7 +157,7 @@
             const now = new Date();
             
             if (scheduleData.length === 0) {
-                container.innerHTML = '<img src="assets/OnDemand.png" alt="Watch on demand" style="width: 100%; height: 100%; object-fit: cover;">';
+                container.innerHTML = '<img src="assets/OnDemand.png" alt="Watch on demand">';
                 return;
             }
             
@@ -192,14 +192,14 @@
                             allowfullscreen>
                         </iframe>`;
                 } else {
-                    container.innerHTML = '<img src="assets/BRB.jpg" alt="Be right back" style="width: 100%; height: 100%; object-fit: cover;">';
+                    container.innerHTML = '<img src="assets/BRB.jpg" alt="Be right back">';
                 }
             } else if (hasUpcoming) {
                 // Gap in schedule - show BRB
-                container.innerHTML = '<img src="assets/BRB.jpg" alt="Be right back" style="width: 100%; height: 100%; object-fit: cover;">';
+                container.innerHTML = '<img src="assets/BRB.jpg" alt="Be right back">';
             } else {
                 // All sessions are in the past - show on demand
-                container.innerHTML = '<img src="assets/OnDemand.png" alt="Watch on demand" style="width: 100%; height: 100%; object-fit: cover;">';
+                container.innerHTML = '<img src="assets/OnDemand.png" alt="Watch on demand">';
             }
         }
         
