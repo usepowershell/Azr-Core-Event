@@ -21,6 +21,12 @@ html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text); f
   max-width: 100%;
 }
 
+.hero-logo {
+  max-width: 200px;
+  height: auto;
+  margin-bottom: 16px;
+}
+
 .hero h1 { font-size: 40px; margin: 8px 0 4px; }
 .hero .tagline { color: var(--muted); margin: 0 0 24px; }
 
