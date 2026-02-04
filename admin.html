@@ -326,6 +326,8 @@
             try {
                 const response = await fetch('/api/schedule');
                 const data = await response.json();
+                console.log('Loaded schedule data:', data);
+                console.log('First item ID:', data.schedule?.[0]?.id);
                 scheduleData = data.schedule || [];
                 renderSchedule();
             } catch (error) {
@@ -437,6 +439,8 @@
             
             const id = document.getElementById('item-id').value;
             const startTimeValue = document.getElementById('startTime').value;
+            
+            console.log('Save called with ID:', id, '| ID type:', typeof id, '| ID length:', id?.length);
             
             // Validate required fields
             if (!document.getElementById('title').value || !document.getElementById('videoId').value || !startTimeValue) {

@@ -91,14 +91,21 @@ async function updateScheduleItem(request, context) {
         const body = await request.json();
         const client = getTableClient();
         
+        context.log("Update requested for ID:", id);
+        
         // Find the existing entity first
         let existingEntity = null;
+        let allRowKeys = [];
         for await (const entity of client.listEntities()) {
+            allRowKeys.push(entity.rowKey);
             if (entity.rowKey === id) {
                 existingEntity = entity;
                 break;
             }
         }
+        
+        context.log("All rowKeys in table:", allRowKeys);
+        context.log("Found entity:", existingEntity ? "yes" : "no");
         
         if (!existingEntity) {
             return {
