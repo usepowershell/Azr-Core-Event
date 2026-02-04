@@ -208,7 +208,8 @@
             try {
                 const response = await fetch('/api/speakers');
                 if (!response.ok) throw new Error('Failed to load speakers');
-                speakersData = await response.json();
+                const data = await response.json();
+                speakersData = data.speakers || [];
                 renderSpeakers();
             } catch (error) {
                 console.error('Error loading speakers:', error);
@@ -231,13 +232,14 @@
             );
             
             grid.innerHTML = sortedSpeakers.map(speaker => {
-                const avatarStyle = speaker.headshotUrl 
-                    ? `background-image: url('${speaker.headshotUrl}')`
+                const headshotUrl = speaker.headshotFile ? `/images/speakers/${speaker.headshotFile}` : '';
+                const avatarStyle = headshotUrl 
+                    ? `background-image: url('${headshotUrl}')`
                     : '';
                 const initials = getInitials(speaker.name);
                 
                 return `
-                    <div class="speaker-card" onclick="openSpeakerModal('${speaker.rowKey}')">
+                    <div class="speaker-card" onclick="openSpeakerModal('${speaker.id}')">
                         <div class="speaker-avatar" style="${avatarStyle}">
                             ${!speaker.headshotUrl ? initials : ''}
                         </div>
@@ -265,13 +267,14 @@
         }
         
         function openSpeakerModal(speakerId) {
-            const speaker = speakersData.find(s => s.rowKey === speakerId);
+            const speaker = speakersData.find(s => s.id === speakerId);
             if (!speaker) return;
             
             // Set avatar
             const avatarEl = document.getElementById('speaker-modal-avatar');
-            if (speaker.headshotUrl) {
-                avatarEl.style.backgroundImage = `url('${speaker.headshotUrl}')`;
+            const headshotUrl = speaker.headshotFile ? `/images/speakers/${speaker.headshotFile}` : '';
+            if (headshotUrl) {
+                avatarEl.style.backgroundImage = `url('${headshotUrl}')`;
                 avatarEl.textContent = '';
             } else {
                 avatarEl.style.backgroundImage = '';
@@ -306,8 +309,9 @@
             // Find speaker's sessions
             const sessionsEl = document.getElementById('speaker-modal-sessions-list');
             const speakerSessions = scheduleData.filter(session => {
-                const sessionIds = speaker.sessionIds ? speaker.sessionIds.split(',').map(s => s.trim()) : [];
-                return sessionIds.includes(session.id) || 
+                // sessionIds is already an array from the API
+                const sessionIds = Array.isArray(speaker.sessionIds) ? speaker.sessionIds : [];
+                return sessionIds.includes(session.id) || sessionIds.includes(session.videoId) || 
                        (session.description && session.description.toLowerCase().includes(speaker.name.toLowerCase()));
             });
             
