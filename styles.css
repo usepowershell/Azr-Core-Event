@@ -101,6 +101,53 @@ html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text); f
   font-weight: 600;
 }
 
+/* LIVE Badge */
+.live-badge {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  background: rgba(255, 0, 0, 0.9);
+  color: white;
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  z-index: 20;
+  animation: live-pulse 2s infinite;
+}
+
+@keyframes live-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+/* Live Chat Button */
+.live-chat-button {
+  text-align: center;
+  margin-top: 12px;
+}
+
+.btn-chat {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  background: var(--primary);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.2s;
+}
+
+.btn-chat:hover {
+  background: var(--primary-2);
+  transform: scale(1.02);
+}
+
 .video-error {
   position: absolute;
   top: 0;

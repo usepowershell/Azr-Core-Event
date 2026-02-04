@@ -27,6 +27,11 @@
         </div>
         <p class="autoplay-note"><em>Most browsers require videos to be muted for autoplay to work due to autoplay policies. The video will start automatically when the page loads, but it will be muted initially. You can unmute it using the player controls.</em></p>
         
+        <!-- Live Chat Button -->
+        <div id="live-chat-button" class="live-chat-button" style="display: none;">
+            <button onclick="openLiveChat()" class="btn-chat">💬 Open Live Chat</button>
+        </div>
+        
         <!-- Now Playing Info Box -->
         <div id="now-playing-box" class="now-playing-box" style="display: none;">
             <div class="now-playing-header">
@@ -262,6 +267,12 @@
                 document.getElementById('now-playing-description').innerHTML = formatDescription(currentSession.description);
                 document.getElementById('now-playing-link').href = currentSession.url || '#';
                 nowPlayingBox.style.display = 'block';
+                
+                // Update LIVE indicator in Now Playing box
+                const liveIndicator = nowPlayingBox.querySelector('.live-indicator');
+                if (liveIndicator) {
+                    liveIndicator.style.display = currentSession.isLive ? 'inline' : 'none';
+                }
             } else {
                 nowPlayingBox.style.display = 'none';
             }
@@ -341,17 +352,29 @@
             if (currentSession) {
                 // Play the current session
                 const videoId = currentSession.videoId || extractVideoId(currentSession.url);
+                const isLive = currentSession.isLive || false;
+                
+                // Store current video ID for chat popup
+                window.currentVideoId = videoId;
+                
+                // Show/hide live chat button
+                const chatButton = document.getElementById('live-chat-button');
+                if (chatButton) {
+                    chatButton.style.display = isLive ? 'block' : 'none';
+                }
+                
                 if (videoId) {
-                    // Calculate how far into the video we should be
+                    // Calculate how far into the video we should be (only for non-live)
                     const sessionStart = new Date(currentSession.startTime);
                     const elapsedSeconds = Math.floor((now - sessionStart) / 1000);
-                    const startOffset = Math.max(0, elapsedSeconds);
+                    const startOffset = isLive ? 0 : Math.max(0, elapsedSeconds);
                     
                     // Create a placeholder div for the YouTube player
                     container.innerHTML = `
                         <div id="youtube-player"></div>
+                        ${isLive ? '<div class="live-badge">🔴 LIVE</div>' : ''}
                         <div class="video-overlay" id="video-overlay">
-                            <div class="now-playing">Now Playing</div>
+                            <div class="now-playing">${isLive ? '🔴 LIVE' : 'Now Playing'}</div>
                             <div class="video-title">${escapeHtml(currentSession.title)}</div>
                         </div>`;
                     
@@ -393,16 +416,33 @@
                     });
                 } else {
                     container.innerHTML = '<img src="assets/BRB.jpg" alt="Be right back">';
+                    hideLiveChatButton();
                 }
             } else if (hasUpcomingToday) {
                 // Gap in schedule today - show BRB
                 container.innerHTML = '<img src="assets/BRB.jpg" alt="Be right back">';
+                hideLiveChatButton();
             } else if (hasUpcomingLater) {
                 // Done for today but more sessions tomorrow/later - show See You Tomorrow
                 container.innerHTML = '<img src="assets/See-you-tomorrow.png" alt="See you tomorrow">';
+                hideLiveChatButton();
             } else {
                 // All sessions are in the past - show on demand
                 container.innerHTML = '<img src="assets/OnDemand.png" alt="Watch on demand">';
+                hideLiveChatButton();
+            }
+        }
+        
+        function hideLiveChatButton() {
+            const chatButton = document.getElementById('live-chat-button');
+            if (chatButton) chatButton.style.display = 'none';
+            window.currentVideoId = null;
+        }
+        
+        function openLiveChat() {
+            if (window.currentVideoId) {
+                const chatUrl = `https://www.youtube.com/live_chat?v=${window.currentVideoId}&embed_domain=${window.location.hostname}`;
+                window.open(chatUrl, 'YouTubeChat', 'width=400,height=600,scrollbars=yes,resizable=yes');
             }
         }
         
