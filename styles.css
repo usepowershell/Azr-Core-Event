@@ -22,7 +22,8 @@ html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text); f
 }
 
 .hero-logo {
-  max-width: 200px;
+  max-width: 66%;
+  width: 900px;
   height: auto;
   margin-bottom: 16px;
 }
