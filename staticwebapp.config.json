@@ -5,6 +5,16 @@
       "allowedRoles": ["authenticated"]
     },
     {
+      "route": "/api/schedule/export",
+      "methods": ["GET"],
+      "allowedRoles": ["authenticated"]
+    },
+    {
+      "route": "/api/schedule/import",
+      "methods": ["POST"],
+      "allowedRoles": ["authenticated"]
+    },
+    {
       "route": "/api/schedule",
       "methods": ["POST"],
       "allowedRoles": ["authenticated"]

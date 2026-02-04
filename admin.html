@@ -237,8 +237,11 @@
         
         <div id="message-container"></div>
         
-        <div>
+        <div style="display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 20px;">
             <button class="btn btn-primary" onclick="openAddModal()">+ Add Schedule Item</button>
+            <button class="btn btn-secondary" onclick="exportSchedule()">📥 Export CSV</button>
+            <button class="btn btn-secondary" onclick="document.getElementById('import-file').click()">📤 Import CSV</button>
+            <input type="file" id="import-file" accept=".csv" style="display: none;" onchange="importSchedule(event)">
         </div>
         
         <div id="schedule-container">
@@ -540,6 +543,78 @@
             } catch (error) {
                 console.error('Error deleting:', error);
                 showMessage('Failed to delete schedule item. Please try again.', 'error');
+            }
+        }
+        
+        // Export schedule as CSV
+        async function exportSchedule() {
+            try {
+                showMessage('Exporting schedule...');
+                const response = await fetch('/api/schedule/export');
+                
+                if (!response.ok) {
+                    throw new Error('Failed to export');
+                }
+                
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `schedule-export-${new Date().toISOString().split('T')[0]}.csv`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(url);
+                
+                showMessage('Schedule exported successfully!');
+            } catch (error) {
+                console.error('Error exporting:', error);
+                showMessage('Failed to export schedule. Please try again.', 'error');
+            }
+        }
+        
+        // Import schedule from CSV
+        async function importSchedule(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            // Reset file input so same file can be selected again
+            event.target.value = '';
+            
+            if (!confirm(`Import "${file.name}"?\n\nThis will:\n- Update existing items (by sessionId)\n- Create new items (if sessionId is blank or new)\n\nContinue?`)) {
+                return;
+            }
+            
+            try {
+                showMessage('Importing schedule...');
+                
+                const content = await file.text();
+                
+                const response = await fetch('/api/schedule/import', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/csv' },
+                    body: content
+                });
+                
+                const result = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(result.error || 'Import failed');
+                }
+                
+                let message = `Import complete: ${result.created} created, ${result.updated} updated`;
+                if (result.errors && result.errors.length > 0) {
+                    message += `\n\nErrors:\n${result.errors.join('\n')}`;
+                    console.warn('Import errors:', result.errors);
+                    showMessage(message, 'error');
+                } else {
+                    showMessage(message);
+                }
+                
+                loadSchedule();
+            } catch (error) {
+                console.error('Error importing:', error);
+                showMessage(`Failed to import: ${error.message}`, 'error');
             }
         }
         
