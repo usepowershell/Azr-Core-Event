@@ -1,0 +1,17 @@
+# Dependencies
+node_modules/
+package-lock.json
+
+# Migration files (not needed in deployment)
+migrate-schedule.js
+package.json
+
+# Old backup files
+styles-old.css
+
+# Local settings
+api/local.settings.json
+
+# OS files
+.DS_Store
+Thumbs.db
