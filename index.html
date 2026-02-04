@@ -149,8 +149,16 @@
         </div>
     </div>
 
+    <!-- YouTube IFrame API -->
+    <script src="https://www.youtube.com/iframe_api"></script>
+    
     <script>
         let scheduleData = [];
+        let youtubePlayer = null;
+        
+        function onYouTubeIframeAPIReady() {
+            // API is ready, player will be created when needed
+        }
         
         function updateVideoPlayer() {
             const container = document.getElementById('video-container');
@@ -183,14 +191,48 @@
                 // Play the current session
                 const videoId = currentSession.videoId || extractVideoId(currentSession.url);
                 if (videoId) {
+                    // Create a placeholder div for the YouTube player
                     container.innerHTML = `
-                        <iframe 
-                            src="https://www.youtube.com/embed/${videoId}?autoplay=1" 
-                            title="${escapeHtml(currentSession.title)}"
-                            frameborder="0" 
-                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
-                            allowfullscreen>
-                        </iframe>`;
+                        <div id="youtube-player"></div>
+                        <div class="video-overlay" id="video-overlay">
+                            <div class="now-playing">Now Playing</div>
+                            <div class="video-title">${escapeHtml(currentSession.title)}</div>
+                        </div>`;
+                    
+                    // Create YouTube player with error handling
+                    if (youtubePlayer) {
+                        youtubePlayer.destroy();
+                    }
+                    
+                    youtubePlayer = new YT.Player('youtube-player', {
+                        videoId: videoId,
+                        playerVars: {
+                            autoplay: 1,
+                            modestbranding: 1,
+                            rel: 0
+                        },
+                        events: {
+                            onReady: function(event) {
+                                // Hide overlay after a few seconds
+                                setTimeout(() => {
+                                    const overlay = document.getElementById('video-overlay');
+                                    if (overlay) overlay.style.opacity = '0';
+                                }, 5000);
+                            },
+                            onError: function(event) {
+                                // Video can't be played - show link to watch on YouTube
+                                container.innerHTML = `
+                                    <div class="video-error">
+                                        <img src="assets/BRB.jpg" alt="Video unavailable" class="error-bg">
+                                        <div class="error-overlay">
+                                            <p class="error-title">Now Playing: ${escapeHtml(currentSession.title)}</p>
+                                            <p class="error-message">This video cannot be embedded.</p>
+                                            <a href="${currentSession.url}" target="_blank" class="btn-watch-large">▶ Watch on YouTube</a>
+                                        </div>
+                                    </div>`;
+                            }
+                        }
+                    });
                 } else {
                     container.innerHTML = '<img src="assets/BRB.jpg" alt="Be right back">';
                 }
