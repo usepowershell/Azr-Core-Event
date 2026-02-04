@@ -25,6 +25,7 @@
         <div class="video-container" id="video-container">
             <img src="assets/Loading-Schedule.png" alt="Loading schedule..." id="video-placeholder">
         </div>
+        <p class="autoplay-note"><em>Most browsers require videos to be muted for autoplay to work due to autoplay policies. The video will start automatically when the page loads, but it will be muted initially. You can unmute it using the player controls.</em></p>
     </section>
 
     <!-- About Section -->
@@ -208,6 +209,7 @@
                         videoId: videoId,
                         playerVars: {
                             autoplay: 1,
+                            mute: 1,
                             modestbranding: 1,
                             rel: 0
                         },
