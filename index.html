@@ -26,6 +26,26 @@
             <img src="assets/Loading-Schedule.png" alt="Loading schedule..." id="video-placeholder">
         </div>
         <p class="autoplay-note"><em>Most browsers require videos to be muted for autoplay to work due to autoplay policies. The video will start automatically when the page loads, but it will be muted initially. You can unmute it using the player controls.</em></p>
+        
+        <!-- Now Playing Info Box -->
+        <div id="now-playing-box" class="now-playing-box" style="display: none;">
+            <div class="now-playing-header">
+                <span class="live-indicator">● LIVE</span>
+                <span class="now-playing-label">Now Playing</span>
+            </div>
+            <h3 id="now-playing-title"></h3>
+            <div id="now-playing-description" class="now-playing-description"></div>
+            <a id="now-playing-link" href="#" target="_blank" class="btn-youtube">▶ Watch on YouTube</a>
+        </div>
+        
+        <!-- Up Next Box -->
+        <div id="up-next-box" class="up-next-box" style="display: none;">
+            <div class="up-next-header">
+                <span class="up-next-label">Up Next</span>
+                <span id="up-next-countdown" class="up-next-countdown"></span>
+            </div>
+            <h4 id="up-next-title"></h4>
+        </div>
     </section>
 
     <!-- About Section -->
@@ -156,9 +176,102 @@
     <script>
         let scheduleData = [];
         let youtubePlayer = null;
+        let countdownInterval = null;
         
         function onYouTubeIframeAPIReady() {
             // API is ready, player will be created when needed
+        }
+        
+        function formatDescription(text) {
+            if (!text) return '';
+            // Convert URLs to clickable links
+            return text.replace(
+                /(https?:\/\/[^\s]+)/g, 
+                '<a href="$1" target="_blank" rel="noopener">$1</a>'
+            ).replace(/\n/g, '<br>');
+        }
+        
+        function formatCountdown(ms) {
+            if (ms <= 0) return 'Starting now...';
+            const totalSeconds = Math.floor(ms / 1000);
+            const hours = Math.floor(totalSeconds / 3600);
+            const minutes = Math.floor((totalSeconds % 3600) / 60);
+            const seconds = totalSeconds % 60;
+            
+            if (hours > 0) {
+                return `Starting in ${hours}h ${minutes}m ${seconds}s`;
+            } else if (minutes > 0) {
+                return `Starting in ${minutes}m ${seconds}s`;
+            } else {
+                return `Starting in ${seconds}s`;
+            }
+        }
+        
+        function findNextSession(currentSession) {
+            const now = new Date();
+            let nextSession = null;
+            let nextStartTime = null;
+            
+            for (const session of scheduleData) {
+                const startTime = new Date(session.startTime);
+                
+                // Skip the current session and past sessions
+                if (currentSession && session.id === currentSession.id) continue;
+                if (startTime <= now) continue;
+                
+                if (!nextSession || startTime < nextStartTime) {
+                    nextSession = session;
+                    nextStartTime = startTime;
+                }
+            }
+            
+            return nextSession;
+        }
+        
+        function updateInfoBoxes(currentSession, nextSession) {
+            const nowPlayingBox = document.getElementById('now-playing-box');
+            const upNextBox = document.getElementById('up-next-box');
+            
+            // Clear any existing countdown
+            if (countdownInterval) {
+                clearInterval(countdownInterval);
+                countdownInterval = null;
+            }
+            
+            // Update Now Playing box
+            if (currentSession) {
+                document.getElementById('now-playing-title').textContent = currentSession.title;
+                document.getElementById('now-playing-description').innerHTML = formatDescription(currentSession.description);
+                document.getElementById('now-playing-link').href = currentSession.url || '#';
+                nowPlayingBox.style.display = 'block';
+            } else {
+                nowPlayingBox.style.display = 'none';
+            }
+            
+            // Update Up Next box
+            if (nextSession) {
+                const nextStartTime = new Date(nextSession.startTime);
+                document.getElementById('up-next-title').textContent = nextSession.title;
+                upNextBox.style.display = 'block';
+                
+                // Start countdown
+                function updateCountdown() {
+                    const now = new Date();
+                    const ms = nextStartTime - now;
+                    document.getElementById('up-next-countdown').textContent = formatCountdown(ms);
+                    
+                    if (ms <= 0) {
+                        clearInterval(countdownInterval);
+                        // Reload to start the next video
+                        setTimeout(() => updateVideoPlayer(), 1000);
+                    }
+                }
+                
+                updateCountdown();
+                countdownInterval = setInterval(updateCountdown, 1000);
+            } else {
+                upNextBox.style.display = 'none';
+            }
         }
         
         function updateVideoPlayer() {
@@ -167,6 +280,7 @@
             
             if (scheduleData.length === 0) {
                 container.innerHTML = '<img src="assets/OnDemand.png" alt="Watch on demand">';
+                updateInfoBoxes(null, null);
                 return;
             }
             
@@ -187,6 +301,12 @@
                     hasUpcoming = true;
                 }
             }
+            
+            // Find the next session
+            const nextSession = findNextSession(currentSession);
+            
+            // Update info boxes
+            updateInfoBoxes(currentSession, nextSession);
             
             if (currentSession) {
                 // Play the current session
