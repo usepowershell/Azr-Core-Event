@@ -304,7 +304,14 @@
             
             // Find currently playing session
             let currentSession = null;
-            let hasUpcoming = false;
+            let hasUpcomingToday = false;
+            let hasUpcomingLater = false;
+            
+            // Get today's date (midnight)
+            const today = new Date(now);
+            today.setHours(0, 0, 0, 0);
+            const tomorrow = new Date(today);
+            tomorrow.setDate(tomorrow.getDate() + 1);
             
             for (const session of scheduleData) {
                 const startTime = new Date(session.startTime);
@@ -316,7 +323,12 @@
                 }
                 
                 if (startTime > now) {
-                    hasUpcoming = true;
+                    // Check if it's today or a future day
+                    if (startTime < tomorrow) {
+                        hasUpcomingToday = true;
+                    } else {
+                        hasUpcomingLater = true;
+                    }
                 }
             }
             
@@ -382,9 +394,12 @@
                 } else {
                     container.innerHTML = '<img src="assets/BRB.jpg" alt="Be right back">';
                 }
-            } else if (hasUpcoming) {
-                // Gap in schedule - show BRB
+            } else if (hasUpcomingToday) {
+                // Gap in schedule today - show BRB
                 container.innerHTML = '<img src="assets/BRB.jpg" alt="Be right back">';
+            } else if (hasUpcomingLater) {
+                // Done for today but more sessions tomorrow/later - show See You Tomorrow
+                container.innerHTML = '<img src="assets/See-you-tomorrow.png" alt="See you tomorrow">';
             } else {
                 // All sessions are in the past - show on demand
                 container.innerHTML = '<img src="assets/OnDemand.png" alt="Watch on demand">';
