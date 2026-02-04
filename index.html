@@ -192,6 +192,11 @@
                 // Play the current session
                 const videoId = currentSession.videoId || extractVideoId(currentSession.url);
                 if (videoId) {
+                    // Calculate how far into the video we should be
+                    const sessionStart = new Date(currentSession.startTime);
+                    const elapsedSeconds = Math.floor((now - sessionStart) / 1000);
+                    const startOffset = Math.max(0, elapsedSeconds);
+                    
                     // Create a placeholder div for the YouTube player
                     container.innerHTML = `
                         <div id="youtube-player"></div>
@@ -211,7 +216,8 @@
                             autoplay: 1,
                             mute: 1,
                             modestbranding: 1,
-                            rel: 0
+                            rel: 0,
+                            start: startOffset
                         },
                         events: {
                             onReady: function(event) {
