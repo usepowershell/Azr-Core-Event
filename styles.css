@@ -217,6 +217,67 @@ section .section-subtitle {
   background: radial-gradient(800px 400px at 50% 50%, rgba(38,112,255,0.2), transparent 70%);
 }
 
+/* Schedule Days Layout */
+.schedule-days {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+  gap: 24px;
+  padding: 0 24px;
+}
+
+.schedule-day {
+  background: var(--surface);
+  border-radius: 12px;
+  border: 1px solid #2b3a6b;
+  padding: 24px;
+}
+
+.schedule-day h3 {
+  color: var(--primary-2);
+  margin: 0 0 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #2b3a6b;
+}
+
+.day-sessions {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.session-card {
+  background: var(--card);
+  border-radius: 8px;
+  padding: 16px;
+  border: 1px solid #2b3a6b;
+}
+
+.session-card .session-time {
+  color: var(--primary-2);
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.session-card h4 {
+  margin: 0 0 8px;
+  font-size: 16px;
+  line-height: 1.4;
+}
+
+.session-card p {
+  color: var(--muted);
+  font-size: 14px;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.loading {
+  text-align: center;
+  color: var(--muted);
+  padding: 48px;
+}
+
 /* Footer */
 footer {
   background: var(--surface);

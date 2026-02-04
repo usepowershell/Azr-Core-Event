@@ -70,61 +70,8 @@
         <h2>Event Schedule</h2>
         <p class="section-subtitle">Two days of deep-dive sessions on Azure infrastructure and Windows Server.</p>
         
-        <div class="schedule-list">
-            <div class="schedule-item">
-                <div class="schedule-time">
-                    <div>Day 1</div>
-                    <div>3:00 PM ET</div>
-                </div>
-                <div class="schedule-content">
-                    <h4>Anatomy of a Microsoft Outage: Evolving our culture towards more Transparency</h4>
-                    <p>Ever wondered how hyperscale cloud providers keep you informed during outages? Rick Claus and Tajinder Pal Singh Ahluwalia reveal the secrets behind real-time notifications, transparency principles, and outage readiness strategies.</p>
-                </div>
-            </div>
-            
-            <div class="schedule-item">
-                <div class="schedule-time">
-                    <div>Day 1</div>
-                    <div>4:45 PM ET</div>
-                </div>
-                <div class="schedule-content">
-                    <h4>Kubernetes for the Rest of Us: Demystifying Cloud-Native for Windows Server admins</h4>
-                    <p>A practical session designed for IT pros and operations teams navigating the shift from traditional VM-based environments to cloud-native Kubernetes.</p>
-                </div>
-            </div>
-            
-            <div class="schedule-item">
-                <div class="schedule-time">
-                    <div>Day 2</div>
-                    <div>10:00 AM ET</div>
-                </div>
-                <div class="schedule-content">
-                    <h4>The Support Case Files: Windows Server troubleshooting tips</h4>
-                    <p>These are your most requested support cases -- and we are breaking them down! Learn first-hand from Windows Server support engineers.</p>
-                </div>
-            </div>
-            
-            <div class="schedule-item">
-                <div class="schedule-time">
-                    <div>Day 2</div>
-                    <div>11:00 AM ET</div>
-                </div>
-                <div class="schedule-content">
-                    <h4>What's New in 2025 with Windows Admin Center</h4>
-                    <p>Be among the first to learn the new and upcoming features and functionality in Windows Admin Center including virtual machine management, security baseline, and more.</p>
-                </div>
-            </div>
-            
-            <div class="schedule-item">
-                <div class="schedule-time">
-                    <div>Day 2</div>
-                    <div>11:30 AM ET</div>
-                </div>
-                <div class="schedule-content">
-                    <h4>Hotpatching and Update Management for Windows Server with Azure Arc</h4>
-                    <p>Hotpatching is one of the most popular time-saving new features in Windows Server. Learn more and watch helpful demos on managing updates with Azure Arc.</p>
-                </div>
-            </div>
+        <div id="schedule-container" class="schedule-days">
+            <p class="loading">Loading schedule...</p>
         </div>
     </section>
 
@@ -193,6 +140,84 @@
         </div>
         <p class="copyright">© 2026 Azure Core Underground. All rights reserved.</p>
     </footer>
+
+    <script>
+        async function loadSchedule() {
+            const container = document.getElementById('schedule-container');
+            
+            try {
+                const response = await fetch('/api/schedule');
+                if (!response.ok) throw new Error('Failed to load schedule');
+                
+                const data = await response.json();
+                const schedule = data.schedule || [];
+                
+                if (schedule.length === 0) {
+                    container.innerHTML = '<p>No sessions scheduled yet.</p>';
+                    return;
+                }
+                
+                // Group sessions by date
+                const sessionsByDay = {};
+                schedule.forEach(session => {
+                    const date = new Date(session.startTime);
+                    const dayKey = date.toLocaleDateString('en-US', { 
+                        weekday: 'long', 
+                        month: 'long', 
+                        day: 'numeric' 
+                    });
+                    
+                    if (!sessionsByDay[dayKey]) {
+                        sessionsByDay[dayKey] = [];
+                    }
+                    sessionsByDay[dayKey].push(session);
+                });
+                
+                // Sort days chronologically
+                const sortedDays = Object.keys(sessionsByDay).sort((a, b) => {
+                    const dateA = new Date(sessionsByDay[a][0].startTime);
+                    const dateB = new Date(sessionsByDay[b][0].startTime);
+                    return dateA - dateB;
+                });
+                
+                // Build HTML
+                let html = '';
+                sortedDays.forEach((day, index) => {
+                    const sessions = sessionsByDay[day];
+                    html += `<div class="schedule-day">`;
+                    html += `<h3>Day ${index + 1} - ${day}</h3>`;
+                    html += `<div class="day-sessions">`;
+                    
+                    sessions.forEach(session => {
+                        const time = new Date(session.startTime).toLocaleTimeString('en-US', {
+                            hour: 'numeric',
+                            minute: '2-digit',
+                            timeZoneName: 'short'
+                        });
+                        
+                        html += `
+                            <div class="session-card">
+                                <div class="session-time">${time}</div>
+                                <h4>${session.title}</h4>
+                                <p>${session.description ? session.description.substring(0, 150) + '...' : ''}</p>
+                            </div>
+                        `;
+                    });
+                    
+                    html += `</div></div>`;
+                });
+                
+                container.innerHTML = html;
+                
+            } catch (error) {
+                console.error('Error loading schedule:', error);
+                container.innerHTML = '<p>Unable to load schedule. Please try again later.</p>';
+            }
+        }
+        
+        // Load schedule when page loads
+        document.addEventListener('DOMContentLoaded', loadSchedule);
+    </script>
 
 </body>
 </html>
