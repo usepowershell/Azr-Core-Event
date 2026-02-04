@@ -68,7 +68,6 @@
     <!-- Schedule Section -->
     <section id="schedule">
         <h2>Event Schedule</h2>
-        <p class="section-subtitle">Two days of deep-dive sessions on Azure infrastructure and Windows Server.</p>
         
         <div id="schedule-container" class="schedule-days">
             <p class="loading">Loading schedule...</p>
@@ -147,8 +146,6 @@
             
             try {
                 const response = await fetch('/api/schedule');
-                if (!response.ok) throw new Error('Failed to load schedule');
-                
                 const data = await response.json();
                 const schedule = data.schedule || [];
                 
