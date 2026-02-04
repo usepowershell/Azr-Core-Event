@@ -237,11 +237,12 @@
         
         <div id="message-container"></div>
         
-        <div style="display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 20px;">
+        <div style="display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 20px; align-items: center;">
             <button class="btn btn-primary" onclick="openAddModal()">+ Add Schedule Item</button>
             <button class="btn btn-secondary" onclick="exportSchedule()">📥 Export CSV</button>
             <button class="btn btn-secondary" onclick="document.getElementById('import-file').click()">📤 Import CSV</button>
             <input type="file" id="import-file" accept=".csv" style="display: none;" onchange="importSchedule(event)">
+            <button id="delete-selected-btn" class="btn btn-danger" onclick="deleteSelected()" style="display: none;">🗑️ Delete Selected (<span id="selected-count">0</span>)</button>
         </div>
         
         <div id="schedule-container">
@@ -352,6 +353,7 @@
                 <table class="schedule-table">
                     <thead>
                         <tr>
+                            <th style="width: 40px;"><input type="checkbox" id="select-all" onchange="toggleSelectAll(this.checked)" title="Select all"></th>
                             <th>Title</th>
                             <th>Video ID</th>
                             <th>Start Time</th>
@@ -362,6 +364,7 @@
                     <tbody>
                         ${scheduleData.map(item => `
                             <tr>
+                                <td><input type="checkbox" class="item-checkbox" data-id="${item.id}" onchange="updateSelectedCount()"></td>
                                 <td>${escapeHtml(item.title)}</td>
                                 <td><code>${escapeHtml(item.videoId)}</code></td>
                                 <td>${formatDate(item.startTime)}</td>
@@ -376,6 +379,7 @@
                 </table>
             `;
             document.getElementById('schedule-container').innerHTML = html;
+            updateSelectedCount();
         }
         
         // Helper functions
@@ -616,6 +620,77 @@
                 console.error('Error importing:', error);
                 showMessage(`Failed to import: ${error.message}`, 'error');
             }
+        }
+        
+        // Toggle select all checkboxes
+        function toggleSelectAll(checked) {
+            const checkboxes = document.querySelectorAll('.item-checkbox');
+            checkboxes.forEach(cb => cb.checked = checked);
+            updateSelectedCount();
+        }
+        
+        // Update the selected count and show/hide delete button
+        function updateSelectedCount() {
+            const checkboxes = document.querySelectorAll('.item-checkbox:checked');
+            const count = checkboxes.length;
+            const countSpan = document.getElementById('selected-count');
+            const deleteBtn = document.getElementById('delete-selected-btn');
+            const selectAllCheckbox = document.getElementById('select-all');
+            
+            if (countSpan) countSpan.textContent = count;
+            if (deleteBtn) deleteBtn.style.display = count > 0 ? 'inline-block' : 'none';
+            
+            // Update select-all checkbox state
+            const allCheckboxes = document.querySelectorAll('.item-checkbox');
+            if (selectAllCheckbox && allCheckboxes.length > 0) {
+                selectAllCheckbox.checked = count === allCheckboxes.length;
+                selectAllCheckbox.indeterminate = count > 0 && count < allCheckboxes.length;
+            }
+        }
+        
+        // Delete selected items
+        async function deleteSelected() {
+            const checkboxes = document.querySelectorAll('.item-checkbox:checked');
+            const ids = Array.from(checkboxes).map(cb => cb.dataset.id);
+            
+            if (ids.length === 0) {
+                showMessage('No items selected.', 'error');
+                return;
+            }
+            
+            if (!confirm(`Are you sure you want to delete ${ids.length} item(s)?\n\nThis cannot be undone.`)) {
+                return;
+            }
+            
+            showMessage(`Deleting ${ids.length} items...`);
+            
+            let successCount = 0;
+            let errorCount = 0;
+            
+            for (const id of ids) {
+                try {
+                    const response = await fetch(`/api/schedule/${encodeURIComponent(id)}`, {
+                        method: 'DELETE'
+                    });
+                    
+                    if (response.ok) {
+                        successCount++;
+                    } else {
+                        errorCount++;
+                    }
+                } catch (error) {
+                    console.error('Error deleting item:', id, error);
+                    errorCount++;
+                }
+            }
+            
+            if (errorCount > 0) {
+                showMessage(`Deleted ${successCount} items. ${errorCount} failed.`, 'error');
+            } else {
+                showMessage(`Successfully deleted ${successCount} items.`);
+            }
+            
+            loadSchedule();
         }
         
         // Initialize
