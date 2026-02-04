@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - main
-      - dev
   pull_request:
     types: [opened, synchronize, reopened, closed]
     branches:
@@ -32,7 +31,6 @@ jobs:
           app_location: "/" # App source code path
           # api_location: "api" # Disabled - using linked Azure Function App with Managed Identity
           output_location: "" # Built app content directory - optional
-          deployment_environment: ${{ github.ref == 'refs/heads/dev' && 'dev' || '' }}
           ###### End of Repository/Build Configurations ######
 
   close_pull_request_job:
