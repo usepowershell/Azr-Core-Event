@@ -1,0 +1,37 @@
+{
+  "routes": [
+    {
+      "route": "/admin.html",
+      "allowedRoles": ["authenticated"]
+    },
+    {
+      "route": "/api/schedule",
+      "methods": ["POST"],
+      "allowedRoles": ["authenticated"]
+    },
+    {
+      "route": "/api/schedule/*",
+      "methods": ["PUT", "DELETE"],
+      "allowedRoles": ["authenticated"]
+    },
+    {
+      "route": "/api/schedule",
+      "methods": ["GET"],
+      "allowedRoles": ["anonymous"]
+    }
+  ],
+  "responseOverrides": {
+    "401": {
+      "statusCode": 302,
+      "redirect": "/.auth/login/aad"
+    }
+  },
+  "navigationFallback": {
+    "rewrite": "/index.html",
+    "exclude": ["/api/*", "/*.html", "/styles.css", "/*.json"]
+  },
+  "globalHeaders": {
+    "X-Content-Type-Options": "nosniff",
+    "X-Frame-Options": "DENY"
+  }
+}

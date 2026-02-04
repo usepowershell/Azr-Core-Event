@@ -1,0 +1,17 @@
+{
+  "name": "azurecoreunderground-api",
+  "version": "1.0.0",
+  "description": "API for Azure Core Underground schedule management",
+  "main": "src/functions/*.js",
+  "scripts": {
+    "start": "func start",
+    "test": "echo \"No tests configured\""
+  },
+  "dependencies": {
+    "@azure/data-tables": "^13.2.2",
+    "@azure/identity": "^4.0.0"
+  },
+  "devDependencies": {
+    "azure-functions-core-tools": "^4.x"
+  }
+}
