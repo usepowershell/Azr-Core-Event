@@ -8,6 +8,10 @@ on:
       - 'api/**'
   workflow_dispatch:
 
+permissions:
+  id-token: write
+  contents: read
+
 env:
   AZURE_FUNCTIONAPP_NAME: 'azcoreunderground-api'
   AZURE_FUNCTIONAPP_PACKAGE_PATH: 'api'
@@ -31,9 +35,15 @@ jobs:
           cd ${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}
           npm install
 
+      - name: Login to Azure
+        uses: azure/login@v2
+        with:
+          client-id: 1763d265-f877-4d9f-9366-1d344d4a941e
+          tenant-id: eebf5abf-4444-4193-992e-c2f812a4ef4f
+          subscription-id: 9cba8386-943e-4adf-b359-1d21a0d14857
+
       - name: Deploy to Azure Functions
         uses: Azure/functions-action@v1
         with:
           app-name: ${{ env.AZURE_FUNCTIONAPP_NAME }}
           package: ${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}
-          publish-profile: ${{ secrets.AZURE_FUNCTIONAPP_PUBLISH_PROFILE }}
