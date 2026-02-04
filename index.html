@@ -22,14 +22,29 @@
 
     <!-- Video Player Section -->
     <section id="video" class="video-section">
-        <div class="video-container">
-            <iframe 
-                src="https://www.youtube.com/embed/dQw4w9WgXcQ" 
-                title="Azure Core Underground Live Stream"
-                frameborder="0" 
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
-                allowfullscreen>
-            </iframe>
+        <div class="video-container" id="video-container">
+            <img src="assets/Loading-Schedule.png" alt="Loading schedule..." id="video-placeholder">
+        </div>
+        <p class="autoplay-note"><em>Most browsers require videos to be muted for autoplay to work due to autoplay policies. The video will start automatically when the page loads, but it will be muted initially. You can unmute it using the player controls.</em></p>
+        
+        <!-- Now Playing Info Box -->
+        <div id="now-playing-box" class="now-playing-box" style="display: none;">
+            <div class="now-playing-header">
+                <span class="live-indicator">● LIVE</span>
+                <span class="now-playing-label">Now Playing</span>
+            </div>
+            <h3 id="now-playing-title"></h3>
+            <div id="now-playing-description" class="now-playing-description"></div>
+            <a id="now-playing-link" href="#" target="_blank" class="btn-youtube">▶ Watch on YouTube</a>
+        </div>
+        
+        <!-- Up Next Box -->
+        <div id="up-next-box" class="up-next-box" style="display: none;">
+            <div class="up-next-header">
+                <span class="up-next-label">Up Next</span>
+                <span id="up-next-countdown" class="up-next-countdown"></span>
+            </div>
+            <h4 id="up-next-title"></h4>
         </div>
     </section>
 
@@ -134,11 +149,29 @@
     <footer>
         <div class="footer-links">
             <a href="#">Privacy Policy</a>
-            <a href="#">Code of Conduct</a>
+            <a href="#" onclick="openCodeOfConduct(); return false;">Code of Conduct</a>
+            <a href="/admin.html">Admin</a>
             <a href="https://azure.microsoft.com" target="_blank">Powered by Azure</a>
         </div>
         <p class="copyright">© 2026 Azure Core Underground. All rights reserved.</p>
     </footer>
+
+    <!-- Code of Conduct Modal -->
+    <div id="coc-modal" class="modal-overlay">
+        <div class="modal-content coc-modal-content">
+            <button class="modal-close" onclick="closeCodeOfConduct()">&times;</button>
+            <h2 class="modal-title">Microsoft Event Code of Conduct</h2>
+            <div class="coc-content">
+                <p>Microsoft's mission is to empower every person and every organization on the planet to achieve more. This includes Microsoft parties where we seek to create a respectful, friendly, fun and inclusive experience for all participants. We do not tolerate harassing or disrespectful behavior, messages, images, or interactions by any party participant, in any form, at any aspect of the program including business and social activities, regardless of location.</p>
+                
+                <p>We do not tolerate any behavior that is degrading to any gender, race, sexual orientation or disability, or any behavior that would violate the company's Anti-Harassment and Anti-Discrimination Policy, Equal Employment Opportunity Policy, or Standards of Business Conduct, even if the entertainment is not paid for by Microsoft. In short, the entire experience at the venue must meet our culture standards.</p>
+                
+                <p>We encourage everyone to assist in creating a welcoming and safe environment. Please report any concerns, harassing behavior, or suspicious or disruptive activity to venue staff, the event host or owner, or the nearest event staff. We also encourage employees to contact their Microsoft Manager or our Business Conduct Hotline (1-877-320-MSFT or <a href="mailto:buscond@microsoft.com">buscond@microsoft.com</a>) at any time if you feel a party is against our policy or inconsistent with the Microsoft culture. Outside the United States, call collect to 1-470-219-7087.</p>
+                
+                <p>Microsoft reserves the right to refuse admittance to or remove any person from a party at any time at its sole discretion. We make this policy visible for all Microsoft parties so all attendees can see what is expected and what steps they should take if they see or experience behavior not consistent with this policy.</p>
+            </div>
+        </div>
+    </div>
 
     <!-- Session Modal -->
     <div id="session-modal" class="modal-overlay">
@@ -155,8 +188,214 @@
         </div>
     </div>
 
+    <!-- YouTube IFrame API -->
+    <script src="https://www.youtube.com/iframe_api"></script>
+    
     <script>
         let scheduleData = [];
+        let youtubePlayer = null;
+        let countdownInterval = null;
+        
+        function onYouTubeIframeAPIReady() {
+            // API is ready, player will be created when needed
+        }
+        
+        function formatDescription(text) {
+            if (!text) return '';
+            // Convert URLs to clickable links
+            return text.replace(
+                /(https?:\/\/[^\s]+)/g, 
+                '<a href="$1" target="_blank" rel="noopener">$1</a>'
+            ).replace(/\n/g, '<br>');
+        }
+        
+        function formatCountdown(ms) {
+            if (ms <= 0) return 'Starting now...';
+            const totalSeconds = Math.floor(ms / 1000);
+            const hours = Math.floor(totalSeconds / 3600);
+            const minutes = Math.floor((totalSeconds % 3600) / 60);
+            const seconds = totalSeconds % 60;
+            
+            if (hours > 0) {
+                return `Starting in ${hours}h ${minutes}m ${seconds}s`;
+            } else if (minutes > 0) {
+                return `Starting in ${minutes}m ${seconds}s`;
+            } else {
+                return `Starting in ${seconds}s`;
+            }
+        }
+        
+        function findNextSession(currentSession) {
+            const now = new Date();
+            let nextSession = null;
+            let nextStartTime = null;
+            
+            for (const session of scheduleData) {
+                const startTime = new Date(session.startTime);
+                
+                // Skip the current session and past sessions
+                if (currentSession && session.id === currentSession.id) continue;
+                if (startTime <= now) continue;
+                
+                if (!nextSession || startTime < nextStartTime) {
+                    nextSession = session;
+                    nextStartTime = startTime;
+                }
+            }
+            
+            return nextSession;
+        }
+        
+        function updateInfoBoxes(currentSession, nextSession) {
+            const nowPlayingBox = document.getElementById('now-playing-box');
+            const upNextBox = document.getElementById('up-next-box');
+            
+            // Clear any existing countdown
+            if (countdownInterval) {
+                clearInterval(countdownInterval);
+                countdownInterval = null;
+            }
+            
+            // Update Now Playing box
+            if (currentSession) {
+                document.getElementById('now-playing-title').textContent = currentSession.title;
+                document.getElementById('now-playing-description').innerHTML = formatDescription(currentSession.description);
+                document.getElementById('now-playing-link').href = currentSession.url || '#';
+                nowPlayingBox.style.display = 'block';
+            } else {
+                nowPlayingBox.style.display = 'none';
+            }
+            
+            // Update Up Next box
+            if (nextSession) {
+                const nextStartTime = new Date(nextSession.startTime);
+                document.getElementById('up-next-title').textContent = nextSession.title;
+                upNextBox.style.display = 'block';
+                
+                // Start countdown
+                function updateCountdown() {
+                    const now = new Date();
+                    const ms = nextStartTime - now;
+                    document.getElementById('up-next-countdown').textContent = formatCountdown(ms);
+                    
+                    if (ms <= 0) {
+                        clearInterval(countdownInterval);
+                        // Reload to start the next video
+                        setTimeout(() => updateVideoPlayer(), 1000);
+                    }
+                }
+                
+                updateCountdown();
+                countdownInterval = setInterval(updateCountdown, 1000);
+            } else {
+                upNextBox.style.display = 'none';
+            }
+        }
+        
+        function updateVideoPlayer() {
+            const container = document.getElementById('video-container');
+            const now = new Date();
+            
+            if (scheduleData.length === 0) {
+                container.innerHTML = '<img src="assets/OnDemand.png" alt="Watch on demand">';
+                updateInfoBoxes(null, null);
+                return;
+            }
+            
+            // Find currently playing session
+            let currentSession = null;
+            let hasUpcoming = false;
+            
+            for (const session of scheduleData) {
+                const startTime = new Date(session.startTime);
+                const endTime = new Date(startTime.getTime() + (session.duration || 3600) * 1000);
+                
+                if (now >= startTime && now < endTime) {
+                    currentSession = session;
+                    break;
+                }
+                
+                if (startTime > now) {
+                    hasUpcoming = true;
+                }
+            }
+            
+            // Find the next session
+            const nextSession = findNextSession(currentSession);
+            
+            // Update info boxes
+            updateInfoBoxes(currentSession, nextSession);
+            
+            if (currentSession) {
+                // Play the current session
+                const videoId = currentSession.videoId || extractVideoId(currentSession.url);
+                if (videoId) {
+                    // Calculate how far into the video we should be
+                    const sessionStart = new Date(currentSession.startTime);
+                    const elapsedSeconds = Math.floor((now - sessionStart) / 1000);
+                    const startOffset = Math.max(0, elapsedSeconds);
+                    
+                    // Create a placeholder div for the YouTube player
+                    container.innerHTML = `
+                        <div id="youtube-player"></div>
+                        <div class="video-overlay" id="video-overlay">
+                            <div class="now-playing">Now Playing</div>
+                            <div class="video-title">${escapeHtml(currentSession.title)}</div>
+                        </div>`;
+                    
+                    // Create YouTube player with error handling
+                    if (youtubePlayer) {
+                        youtubePlayer.destroy();
+                    }
+                    
+                    youtubePlayer = new YT.Player('youtube-player', {
+                        videoId: videoId,
+                        playerVars: {
+                            autoplay: 1,
+                            mute: 1,
+                            modestbranding: 1,
+                            rel: 0,
+                            start: startOffset
+                        },
+                        events: {
+                            onReady: function(event) {
+                                // Hide overlay after a few seconds
+                                setTimeout(() => {
+                                    const overlay = document.getElementById('video-overlay');
+                                    if (overlay) overlay.style.opacity = '0';
+                                }, 5000);
+                            },
+                            onError: function(event) {
+                                // Video can't be played - show link to watch on YouTube
+                                container.innerHTML = `
+                                    <div class="video-error">
+                                        <img src="assets/BRB.jpg" alt="Video unavailable" class="error-bg">
+                                        <div class="error-overlay">
+                                            <p class="error-title">Now Playing: ${escapeHtml(currentSession.title)}</p>
+                                            <p class="error-message">This video cannot be embedded.</p>
+                                            <a href="${currentSession.url}" target="_blank" class="btn-watch-large">▶ Watch on YouTube</a>
+                                        </div>
+                                    </div>`;
+                            }
+                        }
+                    });
+                } else {
+                    container.innerHTML = '<img src="assets/BRB.jpg" alt="Be right back">';
+                }
+            } else if (hasUpcoming) {
+                // Gap in schedule - show BRB
+                container.innerHTML = '<img src="assets/BRB.jpg" alt="Be right back">';
+            } else {
+                // All sessions are in the past - show on demand
+                container.innerHTML = '<img src="assets/OnDemand.png" alt="Watch on demand">';
+            }
+        }
+        
+        function extractVideoId(url) {
+            if (!url) return null;
+            const match = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\s]+)/);
+            return match ? match[1] : null;
+        }
         
         async function loadSchedule() {
             const container = document.getElementById('schedule-container');
@@ -165,6 +404,9 @@
                 const response = await fetch('/api/schedule');
                 const data = await response.json();
                 scheduleData = data.schedule || [];
+                
+                // Update video player based on schedule
+                updateVideoPlayer();
                 
                 if (scheduleData.length === 0) {
                     container.innerHTML = '<p>No sessions scheduled yet.</p>';
@@ -278,6 +520,25 @@
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') {
                 closeModal();
+                closeCodeOfConduct();
+            }
+        });
+        
+        // Code of Conduct modal functions
+        function openCodeOfConduct() {
+            document.getElementById('coc-modal').classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+        
+        function closeCodeOfConduct() {
+            document.getElementById('coc-modal').classList.remove('active');
+            document.body.style.overflow = '';
+        }
+        
+        // Close COC modal on overlay click
+        document.getElementById('coc-modal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeCodeOfConduct();
             }
         });
         
