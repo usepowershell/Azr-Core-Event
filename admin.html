@@ -427,18 +427,40 @@
             event.preventDefault();
             
             const id = document.getElementById('item-id').value;
+            const startTimeValue = document.getElementById('startTime').value;
+            
+            // Validate required fields
+            if (!document.getElementById('title').value || !document.getElementById('videoId').value || !startTimeValue) {
+                showMessage('Please fill in all required fields.', 'error');
+                return;
+            }
+            
+            // Format startTime - datetime-local gives YYYY-MM-DDTHH:MM, we need to add timezone
+            let startTime;
+            try {
+                // Append EST timezone offset (-05:00) since the event is in Eastern time
+                startTime = startTimeValue + ':00-05:00';
+            } catch (e) {
+                showMessage('Invalid start time format.', 'error');
+                return;
+            }
+            
             const data = {
                 title: document.getElementById('title').value,
                 videoId: document.getElementById('videoId').value,
-                startTime: new Date(document.getElementById('startTime').value).toISOString(),
+                startTime: startTime,
                 duration: parseInt(document.getElementById('duration').value) || 0,
                 description: document.getElementById('description').value,
                 url: document.getElementById('url').value || `https://www.youtube.com/watch?v=${document.getElementById('videoId').value}`
             };
             
+            console.log('Saving data:', data);
+            
             try {
                 const url = id ? `/api/schedule/${id}` : '/api/schedule';
                 const method = id ? 'PUT' : 'POST';
+                
+                console.log('Request:', method, url);
                 
                 const response = await fetch(url, {
                     method: method,
@@ -446,8 +468,12 @@
                     body: JSON.stringify(data)
                 });
                 
+                console.log('Response status:', response.status);
+                
                 if (!response.ok) {
-                    throw new Error('Failed to save');
+                    const errorText = await response.text();
+                    console.error('Error response:', errorText);
+                    throw new Error(`Failed to save: ${response.status} - ${errorText}`);
                 }
                 
                 closeModal();
@@ -455,7 +481,7 @@
                 loadSchedule();
             } catch (error) {
                 console.error('Error saving:', error);
-                showMessage('Failed to save schedule item. Please try again.', 'error');
+                showMessage(`Failed to save: ${error.message}`, 'error');
             }
         }
         
