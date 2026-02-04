@@ -250,6 +250,16 @@ section .section-subtitle {
   border-radius: 8px;
   padding: 16px;
   border: 1px solid #2b3a6b;
+  min-height: 180px;
+  display: flex;
+  flex-direction: column;
+  cursor: pointer;
+  transition: border-color 0.2s, transform 0.2s;
+}
+
+.session-card:hover {
+  border-color: var(--primary-2);
+  transform: translateY(-2px);
 }
 
 .session-card .session-time {
@@ -263,6 +273,7 @@ section .section-subtitle {
   margin: 0 0 8px;
   font-size: 16px;
   line-height: 1.4;
+  flex-shrink: 0;
 }
 
 .session-card p {
@@ -270,6 +281,100 @@ section .section-subtitle {
   font-size: 14px;
   margin: 0;
   line-height: 1.5;
+  flex-grow: 1;
+  overflow: hidden;
+}
+
+/* Session Modal */
+.modal-overlay {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.8);
+  z-index: 1000;
+  justify-content: center;
+  align-items: center;
+  padding: 24px;
+}
+
+.modal-overlay.active {
+  display: flex;
+}
+
+.modal-content {
+  background: var(--surface);
+  border-radius: 12px;
+  border: 1px solid #2b3a6b;
+  max-width: 700px;
+  max-height: 80vh;
+  overflow-y: auto;
+  padding: 32px;
+  position: relative;
+}
+
+.modal-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: transparent;
+  border: none;
+  color: var(--muted);
+  font-size: 24px;
+  cursor: pointer;
+  padding: 8px;
+  line-height: 1;
+}
+
+.modal-close:hover {
+  color: var(--text);
+}
+
+.modal-time {
+  color: var(--primary-2);
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.modal-title {
+  font-size: 24px;
+  margin: 0 0 16px;
+  line-height: 1.3;
+}
+
+.modal-description {
+  color: var(--muted);
+  line-height: 1.7;
+  white-space: pre-wrap;
+  margin-bottom: 24px;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.btn-watch {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  background: #ff0000;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.btn-watch:hover {
+  opacity: 0.9;
 }
 
 .loading {

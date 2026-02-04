@@ -140,23 +140,40 @@
         <p class="copyright">© 2026 Azure Core Underground. All rights reserved.</p>
     </footer>
 
+    <!-- Session Modal -->
+    <div id="session-modal" class="modal-overlay">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeModal()">&times;</button>
+            <div class="modal-time" id="modal-time"></div>
+            <h2 class="modal-title" id="modal-title"></h2>
+            <div class="modal-description" id="modal-description"></div>
+            <div class="modal-actions">
+                <a id="modal-youtube" href="#" target="_blank" class="btn-watch">
+                    ▶ Watch on YouTube
+                </a>
+            </div>
+        </div>
+    </div>
+
     <script>
+        let scheduleData = [];
+        
         async function loadSchedule() {
             const container = document.getElementById('schedule-container');
             
             try {
                 const response = await fetch('/api/schedule');
                 const data = await response.json();
-                const schedule = data.schedule || [];
+                scheduleData = data.schedule || [];
                 
-                if (schedule.length === 0) {
+                if (scheduleData.length === 0) {
                     container.innerHTML = '<p>No sessions scheduled yet.</p>';
                     return;
                 }
                 
                 // Group sessions by date
                 const sessionsByDay = {};
-                schedule.forEach(session => {
+                scheduleData.forEach(session => {
                     const date = new Date(session.startTime);
                     const dayKey = date.toLocaleDateString('en-US', { 
                         weekday: 'long', 
@@ -192,11 +209,15 @@
                             timeZoneName: 'short'
                         });
                         
+                        const truncatedDesc = session.description 
+                            ? session.description.substring(0, 120) + '...' 
+                            : '';
+                        
                         html += `
-                            <div class="session-card">
+                            <div class="session-card" onclick="openSession('${session.id}')">
                                 <div class="session-time">${time}</div>
-                                <h4>${session.title}</h4>
-                                <p>${session.description ? session.description.substring(0, 150) + '...' : ''}</p>
+                                <h4>${escapeHtml(session.title)}</h4>
+                                <p>${escapeHtml(truncatedDesc)}</p>
                             </div>
                         `;
                     });
@@ -211,6 +232,54 @@
                 container.innerHTML = '<p>Unable to load schedule. Please try again later.</p>';
             }
         }
+        
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+        function openSession(sessionId) {
+            const session = scheduleData.find(s => s.id === sessionId);
+            if (!session) return;
+            
+            const time = new Date(session.startTime).toLocaleString('en-US', {
+                weekday: 'long',
+                month: 'long',
+                day: 'numeric',
+                hour: 'numeric',
+                minute: '2-digit',
+                timeZoneName: 'short'
+            });
+            
+            document.getElementById('modal-time').textContent = time;
+            document.getElementById('modal-title').textContent = session.title;
+            document.getElementById('modal-description').textContent = session.description || 'No description available.';
+            document.getElementById('modal-youtube').href = session.url || '#';
+            
+            document.getElementById('session-modal').classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+        
+        function closeModal() {
+            document.getElementById('session-modal').classList.remove('active');
+            document.body.style.overflow = '';
+        }
+        
+        // Close modal on overlay click
+        document.getElementById('session-modal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeModal();
+            }
+        });
+        
+        // Close modal on Escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeModal();
+            }
+        });
         
         // Load schedule when page loads
         document.addEventListener('DOMContentLoaded', loadSchedule);
