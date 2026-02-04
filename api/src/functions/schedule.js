@@ -171,26 +171,46 @@ async function deleteScheduleItem(request, context) {
 }
 
 // Route handler
-module.exports = async function (context, request) {
-    const method = request.method.toUpperCase();
-    const id = request.params?.id;
+module.exports = async function (context, req) {
+    const method = req.method.toUpperCase();
+    const id = context.bindingData?.id || req.params?.id;
     
+    // Wrap req to have consistent interface
+    const request = {
+        method: req.method,
+        params: { id },
+        json: async () => req.body
+    };
+    
+    let result;
     switch (method) {
         case "GET":
-            return await getSchedule(request, context);
+            result = await getSchedule(request, context);
+            break;
         case "POST":
-            return await addScheduleItem(request, context);
+            result = await addScheduleItem(request, context);
+            break;
         case "PUT":
             if (!id) {
-                return { status: 400, jsonBody: { error: "ID required for update" } };
+                result = { status: 400, jsonBody: { error: "ID required for update" } };
+            } else {
+                result = await updateScheduleItem(request, context);
             }
-            return await updateScheduleItem(request, context);
+            break;
         case "DELETE":
             if (!id) {
-                return { status: 400, jsonBody: { error: "ID required for delete" } };
+                result = { status: 400, jsonBody: { error: "ID required for delete" } };
+            } else {
+                result = await deleteScheduleItem(request, context);
             }
-            return await deleteScheduleItem(request, context);
+            break;
         default:
-            return { status: 405, jsonBody: { error: "Method not allowed" } };
+            result = { status: 405, jsonBody: { error: "Method not allowed" } };
     }
+    
+    context.res = {
+        status: result.status,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(result.jsonBody)
+    };
 };
