@@ -268,10 +268,10 @@
                 document.getElementById('now-playing-link').href = currentSession.url || '#';
                 nowPlayingBox.style.display = 'block';
                 
-                // Update LIVE indicator in Now Playing box
+                // Hide LIVE indicator initially (will be shown by YouTube API if live)
                 const liveIndicator = nowPlayingBox.querySelector('.live-indicator');
                 if (liveIndicator) {
-                    liveIndicator.style.display = currentSession.isLive ? 'inline' : 'none';
+                    liveIndicator.style.display = 'none';
                 }
             } else {
                 nowPlayingBox.style.display = 'none';
@@ -352,29 +352,31 @@
             if (currentSession) {
                 // Play the current session
                 const videoId = currentSession.videoId || extractVideoId(currentSession.url);
-                const isLive = currentSession.isLive || false;
                 
                 // Store current video ID for chat popup
                 window.currentVideoId = videoId;
                 
-                // Show/hide live chat button
+                // Hide live chat button initially (will be shown if video is detected as live)
                 const chatButton = document.getElementById('live-chat-button');
                 if (chatButton) {
-                    chatButton.style.display = isLive ? 'block' : 'none';
+                    chatButton.style.display = 'none';
                 }
                 
                 if (videoId) {
-                    // Calculate how far into the video we should be (only for non-live)
+                    // Calculate how far into the video we should be
                     const sessionStart = new Date(currentSession.startTime);
                     const elapsedSeconds = Math.floor((now - sessionStart) / 1000);
-                    const startOffset = isLive ? 0 : Math.max(0, elapsedSeconds);
+                    const startOffset = Math.max(0, elapsedSeconds);
                     
                     // Create a placeholder div for the YouTube player
                     container.innerHTML = `
                         <div id="youtube-player"></div>
-                        ${isLive ? '<div class="live-badge">🔴 LIVE</div>' : ''}
+                        // Create a placeholder div for the YouTube player (live badge added dynamically)
+                    container.innerHTML = `
+                        <div id="youtube-player"></div>
+                        <div class="live-badge" id="live-badge" style="display: none;">🔴 LIVE</div>
                         <div class="video-overlay" id="video-overlay">
-                            <div class="now-playing">${isLive ? '🔴 LIVE' : 'Now Playing'}</div>
+                            <div class="now-playing" id="now-playing-status">Now Playing</div>
                             <div class="video-title">${escapeHtml(currentSession.title)}</div>
                         </div>`;
                     
@@ -394,6 +396,34 @@
                         },
                         events: {
                             onReady: function(event) {
+                                // Check if video is live using YouTube API
+                                setTimeout(() => {
+                                    try {
+                                        const videoData = event.target.getVideoData();
+                                        const isLive = videoData && videoData.isLive;
+                                        
+                                        // Show/hide live badge
+                                        const liveBadge = document.getElementById('live-badge');
+                                        if (liveBadge) liveBadge.style.display = isLive ? 'block' : 'none';
+                                        
+                                        // Update overlay text
+                                        const statusEl = document.getElementById('now-playing-status');
+                                        if (statusEl && isLive) statusEl.textContent = '🔴 LIVE';
+                                        
+                                        // Show/hide chat button
+                                        const chatButton = document.getElementById('live-chat-button');
+                                        if (chatButton) chatButton.style.display = isLive ? 'block' : 'none';
+                                        
+                                        // Update Now Playing box live indicator
+                                        const liveIndicator = document.querySelector('.now-playing-box .live-indicator');
+                                        if (liveIndicator) liveIndicator.style.display = isLive ? 'inline' : 'none';
+                                        
+                                        console.log('Video live status:', isLive);
+                                    } catch (e) {
+                                        console.log('Could not get video data:', e);
+                                    }
+                                }, 1000);
+                                
                                 // Hide overlay after a few seconds
                                 setTimeout(() => {
                                     const overlay = document.getElementById('video-overlay');
