@@ -250,11 +250,12 @@ section .section-subtitle {
   border-radius: 8px;
   padding: 16px;
   border: 1px solid #2b3a6b;
-  min-height: 180px;
+  height: 160px;
   display: flex;
   flex-direction: column;
   cursor: pointer;
   transition: border-color 0.2s, transform 0.2s;
+  overflow: hidden;
 }
 
 .session-card:hover {
