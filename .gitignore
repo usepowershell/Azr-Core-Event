@@ -4,13 +4,16 @@ package-lock.json
 
 # Migration files (not needed in deployment)
 migrate-schedule.js
-package.json
 
 # Old backup files
 styles-old.css
 
 # Local settings
 api/local.settings.json
+
+# Build/deployment artifacts
+*.zip
+logs/
 
 # OS files
 .DS_Store
