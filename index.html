@@ -254,11 +254,6 @@
         <h1>Azure Core Underground 2026</h1>
         <p class="tagline">Azure Core Underground — a community event focused on compute, network, and storage in Azure.</p>
         
-        <div class="clock-container">
-            <span class="video-clock" id="event-clock">--:--:--</span>
-            <span class="timezone">ET</span>
-        </div>
-        
         <div>
             <a href="#schedule" class="cta">View Schedule</a>
             <a href="https://www.youtube.com/@yourChannel" class="cta secondary" target="_blank">Watch on YouTube</a>
@@ -422,21 +417,5 @@
         <p class="copyright">© 2026 Azure Core Underground. All rights reserved.</p>
     </footer>
 
-    <script>
-        // Simple clock script
-        function updateClock() {
-            const now = new Date();
-            const options = { 
-                hour: '2-digit', 
-                minute: '2-digit', 
-                second: '2-digit', 
-                hour12: false,
-                timeZone: 'America/New_York'
-            };
-            document.getElementById('event-clock').textContent = now.toLocaleTimeString('en-US', options);
-        }
-        updateClock();
-        setInterval(updateClock, 1000);
-    </script>
 </body>
 </html>
