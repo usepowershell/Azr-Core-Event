@@ -5,10 +5,6 @@
       "allowedRoles": ["authenticated"]
     },
     {
-      "route": "/api/schedule-io/*",
-      "allowedRoles": ["authenticated"]
-    },
-    {
       "route": "/api/schedule",
       "methods": ["POST"],
       "allowedRoles": ["authenticated"]
