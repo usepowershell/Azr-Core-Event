@@ -29,11 +29,11 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
 
-      - name: Install dependencies
+      - name: Install production dependencies only
         shell: bash
         run: |
           cd ${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}
-          npm install
+          npm install --omit=dev
 
       - name: Login to Azure
         uses: azure/login@v2
@@ -41,6 +41,12 @@ jobs:
           client-id: 1763d265-f877-4d9f-9366-1d344d4a941e
           tenant-id: eebf5abf-4444-4193-992e-c2f812a4ef4f
           subscription-id: 9cba8386-943e-4adf-b359-1d21a0d14857
+
+      - name: Restart Function App (clear disk space)
+        uses: azure/cli@v2
+        with:
+          inlineScript: |
+            az functionapp restart --name ${{ env.AZURE_FUNCTIONAPP_NAME }} --resource-group rg-AzureCoreUnderground
 
       - name: Deploy to Azure Functions
         uses: Azure/functions-action@v1
