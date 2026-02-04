@@ -188,11 +188,21 @@ async function deleteScheduleItem(request, context) {
     }
 }
 
-// Escape a field for CSV (RFC 4180 compliant)
+// Escape a field for CSV (RFC 4180 compliant + Excel formula protection)
 function escapeCsvField(value) {
     if (value === null || value === undefined) return '';
-    const str = String(value);
-    if (str.includes(',') || str.includes('"') || str.includes('\n') || str.includes('\r')) {
+    let str = String(value);
+    
+    // Check if the value starts with characters Excel interprets as formulas
+    const formulaChars = ['-', '+', '=', '@'];
+    const startsWithFormula = formulaChars.some(ch => str.startsWith(ch));
+    
+    // Always quote fields that start with formula characters or contain special chars
+    if (startsWithFormula || str.includes(',') || str.includes('"') || str.includes('\n') || str.includes('\r')) {
+        // For formula chars, prefix with a single quote (Excel will treat as text)
+        if (startsWithFormula) {
+            str = "'" + str;
+        }
         return '"' + str.replace(/"/g, '""') + '"';
     }
     return str;
@@ -244,6 +254,14 @@ async function exportScheduleAsCsv(request, context) {
     }
 }
 
+// Strip leading single quote that was added for Excel formula protection
+function stripExcelQuote(value) {
+    if (value && value.startsWith("'") && ['-', '+', '=', '@'].some(ch => value.charAt(1) === ch)) {
+        return value.substring(1);
+    }
+    return value;
+}
+
 // Parse CSV line handling quoted fields
 function parseCsvLine(line) {
     const fields = [];
@@ -271,7 +289,7 @@ function parseCsvLine(line) {
                 inQuotes = true;
                 i++;
             } else if (char === ',') {
-                fields.push(current);
+                fields.push(stripExcelQuote(current));
                 current = '';
                 i++;
             } else {
@@ -280,7 +298,7 @@ function parseCsvLine(line) {
             }
         }
     }
-    fields.push(current);
+    fields.push(stripExcelQuote(current));
     return fields;
 }
 
