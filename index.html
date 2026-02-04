@@ -22,14 +22,8 @@
 
     <!-- Video Player Section -->
     <section id="video" class="video-section">
-        <div class="video-container">
-            <iframe 
-                src="https://www.youtube.com/embed/dQw4w9WgXcQ" 
-                title="Azure Core Underground Live Stream"
-                frameborder="0" 
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
-                allowfullscreen>
-            </iframe>
+        <div class="video-container" id="video-container">
+            <img src="assets/Loading-Schedule.png" alt="Loading schedule..." id="video-placeholder" style="width: 100%; height: 100%; object-fit: cover;">
         </div>
     </section>
 
@@ -158,6 +152,63 @@
     <script>
         let scheduleData = [];
         
+        function updateVideoPlayer() {
+            const container = document.getElementById('video-container');
+            const now = new Date();
+            
+            if (scheduleData.length === 0) {
+                container.innerHTML = '<img src="assets/OnDemand.png" alt="Watch on demand" style="width: 100%; height: 100%; object-fit: cover;">';
+                return;
+            }
+            
+            // Find currently playing session
+            let currentSession = null;
+            let hasUpcoming = false;
+            
+            for (const session of scheduleData) {
+                const startTime = new Date(session.startTime);
+                const endTime = new Date(startTime.getTime() + (session.duration || 3600) * 1000);
+                
+                if (now >= startTime && now < endTime) {
+                    currentSession = session;
+                    break;
+                }
+                
+                if (startTime > now) {
+                    hasUpcoming = true;
+                }
+            }
+            
+            if (currentSession) {
+                // Play the current session
+                const videoId = currentSession.videoId || extractVideoId(currentSession.url);
+                if (videoId) {
+                    container.innerHTML = `
+                        <iframe 
+                            src="https://www.youtube.com/embed/${videoId}?autoplay=1" 
+                            title="${escapeHtml(currentSession.title)}"
+                            frameborder="0" 
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+                            allowfullscreen>
+                        </iframe>`;
+                } else {
+                    container.innerHTML = '<img src="assets/BRB.jpg" alt="Be right back" style="width: 100%; height: 100%; object-fit: cover;">';
+                }
+            } else if (hasUpcoming) {
+                // Gap in schedule - show BRB
+                container.innerHTML = '<img src="assets/BRB.jpg" alt="Be right back" style="width: 100%; height: 100%; object-fit: cover;">';
+            } else {
+                // All sessions are in the past - show on demand
+                container.innerHTML = '<img src="assets/OnDemand.png" alt="Watch on demand" style="width: 100%; height: 100%; object-fit: cover;">';
+            }
+        }
+        
+        function extractVideoId(url) {
+            if (!url) return null;
+            const match = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\s]+)/);
+            return match ? match[1] : null;
+        }
+        
         async function loadSchedule() {
             const container = document.getElementById('schedule-container');
             
@@ -165,6 +216,9 @@
                 const response = await fetch('/api/schedule');
                 const data = await response.json();
                 scheduleData = data.schedule || [];
+                
+                // Update video player based on schedule
+                updateVideoPlayer();
                 
                 if (scheduleData.length === 0) {
                     container.innerHTML = '<p>No sessions scheduled yet.</p>';
