@@ -99,32 +99,8 @@
         <h2>Featured Speakers</h2>
         <p class="section-subtitle">Learn from Microsoft engineers and industry experts.</p>
         
-        <div class="speakers-grid">
-            <div class="speaker-card">
-                <div class="speaker-avatar">RC</div>
-                <h4>Rick Claus</h4>
-                <p>Principal Cloud Advocate</p>
-            </div>
-            <div class="speaker-card">
-                <div class="speaker-avatar">PR</div>
-                <h4>Pierre Roman</h4>
-                <p>Senior Cloud Advocate</p>
-            </div>
-            <div class="speaker-card">
-                <div class="speaker-avatar">VS</div>
-                <h4>Vinicius Souza</h4>
-                <p>Cloud Advocate</p>
-            </div>
-            <div class="speaker-card">
-                <div class="speaker-avatar">DW</div>
-                <h4>Davanna White</h4>
-                <p>Product Manager</p>
-            </div>
-            <div class="speaker-card">
-                <div class="speaker-avatar">AP</div>
-                <h4>Artem Pronichkin</h4>
-                <p>Principal Program Manager</p>
-            </div>
+        <div id="speakers-grid" class="speakers-grid">
+            <p class="loading">Loading speakers...</p>
         </div>
     </section>
 
@@ -193,16 +169,171 @@
         </div>
     </div>
 
+    <!-- Speaker Modal -->
+    <div id="speaker-modal" class="modal-overlay">
+        <div class="modal-content speaker-modal-content">
+            <button class="modal-close" onclick="closeSpeakerModal()">&times;</button>
+            <div class="speaker-modal-header">
+                <div class="speaker-modal-avatar" id="speaker-modal-avatar"></div>
+                <div class="speaker-modal-info">
+                    <h2 class="modal-title" id="speaker-modal-name"></h2>
+                    <p class="speaker-modal-title" id="speaker-modal-title"></p>
+                    <p class="speaker-modal-company" id="speaker-modal-company"></p>
+                    <div class="speaker-modal-socials" id="speaker-modal-socials"></div>
+                </div>
+            </div>
+            <div class="speaker-modal-bio" id="speaker-modal-bio"></div>
+            <div class="speaker-modal-sessions">
+                <h3>Sessions</h3>
+                <div id="speaker-modal-sessions-list"></div>
+            </div>
+        </div>
+    </div>
+
     <!-- YouTube IFrame API -->
     <script src="https://www.youtube.com/iframe_api"></script>
     
     <script>
         let scheduleData = [];
+        let speakersData = [];
         let youtubePlayer = null;
         let countdownInterval = null;
         
         function onYouTubeIframeAPIReady() {
             // API is ready, player will be created when needed
+        }
+        
+        // Speaker functions
+        async function loadSpeakers() {
+            try {
+                const response = await fetch('/api/speakers');
+                if (!response.ok) throw new Error('Failed to load speakers');
+                speakersData = await response.json();
+                renderSpeakers();
+            } catch (error) {
+                console.error('Error loading speakers:', error);
+                document.getElementById('speakers-grid').innerHTML = 
+                    '<p class="error">Unable to load speakers. Please try again later.</p>';
+            }
+        }
+        
+        function renderSpeakers() {
+            const grid = document.getElementById('speakers-grid');
+            
+            if (!speakersData || speakersData.length === 0) {
+                grid.innerHTML = '<p>No speakers available yet.</p>';
+                return;
+            }
+            
+            // Sort speakers by name
+            const sortedSpeakers = [...speakersData].sort((a, b) => 
+                (a.name || '').localeCompare(b.name || '')
+            );
+            
+            grid.innerHTML = sortedSpeakers.map(speaker => {
+                const avatarStyle = speaker.headshotUrl 
+                    ? `background-image: url('${speaker.headshotUrl}')`
+                    : '';
+                const initials = getInitials(speaker.name);
+                
+                return `
+                    <div class="speaker-card" onclick="openSpeakerModal('${speaker.rowKey}')">
+                        <div class="speaker-avatar" style="${avatarStyle}">
+                            ${!speaker.headshotUrl ? initials : ''}
+                        </div>
+                        <h3 class="speaker-name">${escapeHtml(speaker.name || 'Unknown')}</h3>
+                        <p class="speaker-title">${escapeHtml(speaker.title || '')}</p>
+                        ${speaker.company ? `<p class="speaker-company">${escapeHtml(speaker.company)}</p>` : ''}
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        function getInitials(name) {
+            if (!name) return '?';
+            return name.split(' ')
+                .map(part => part.charAt(0).toUpperCase())
+                .slice(0, 2)
+                .join('');
+        }
+        
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+        function openSpeakerModal(speakerId) {
+            const speaker = speakersData.find(s => s.rowKey === speakerId);
+            if (!speaker) return;
+            
+            // Set avatar
+            const avatarEl = document.getElementById('speaker-modal-avatar');
+            if (speaker.headshotUrl) {
+                avatarEl.style.backgroundImage = `url('${speaker.headshotUrl}')`;
+                avatarEl.textContent = '';
+            } else {
+                avatarEl.style.backgroundImage = '';
+                avatarEl.textContent = getInitials(speaker.name);
+            }
+            
+            // Set basic info
+            document.getElementById('speaker-modal-name').textContent = speaker.name || 'Unknown';
+            document.getElementById('speaker-modal-title').textContent = speaker.title || '';
+            document.getElementById('speaker-modal-company').textContent = speaker.company || '';
+            
+            // Set bio
+            document.getElementById('speaker-modal-bio').innerHTML = formatDescription(speaker.bio || 'No bio available.');
+            
+            // Set social links
+            const socialsEl = document.getElementById('speaker-modal-socials');
+            const socials = [];
+            if (speaker.twitter) {
+                socials.push(`<a href="${speaker.twitter}" target="_blank" rel="noopener" title="Twitter/X">𝕏</a>`);
+            }
+            if (speaker.linkedin) {
+                socials.push(`<a href="${speaker.linkedin}" target="_blank" rel="noopener" title="LinkedIn">in</a>`);
+            }
+            if (speaker.github) {
+                socials.push(`<a href="${speaker.github}" target="_blank" rel="noopener" title="GitHub">⌨</a>`);
+            }
+            if (speaker.website) {
+                socials.push(`<a href="${speaker.website}" target="_blank" rel="noopener" title="Website">🌐</a>`);
+            }
+            socialsEl.innerHTML = socials.join(' ');
+            
+            // Find speaker's sessions
+            const sessionsEl = document.getElementById('speaker-modal-sessions-list');
+            const speakerSessions = scheduleData.filter(session => {
+                const sessionIds = speaker.sessionIds ? speaker.sessionIds.split(',').map(s => s.trim()) : [];
+                return sessionIds.includes(session.id) || 
+                       (session.description && session.description.toLowerCase().includes(speaker.name.toLowerCase()));
+            });
+            
+            if (speakerSessions.length > 0) {
+                sessionsEl.innerHTML = speakerSessions.map(session => {
+                    const startTime = new Date(session.startTime);
+                    const timeStr = startTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                    const dateStr = startTime.toLocaleDateString([], { month: 'short', day: 'numeric' });
+                    return `
+                        <div class="speaker-session-item" onclick="closeSpeakerModal(); openModal('${session.id}');">
+                            <span class="session-time">${dateStr} ${timeStr}</span>
+                            <span class="session-title">${escapeHtml(session.title)}</span>
+                        </div>
+                    `;
+                }).join('');
+            } else {
+                sessionsEl.innerHTML = '<p class="no-sessions">No sessions linked yet.</p>';
+            }
+            
+            document.getElementById('speaker-modal').classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+        
+        function closeSpeakerModal() {
+            document.getElementById('speaker-modal').classList.remove('active');
+            document.body.style.overflow = '';
         }
         
         function formatDescription(text) {
@@ -598,10 +729,18 @@
             }
         });
         
+        // Close speaker modal on overlay click
+        document.getElementById('speaker-modal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeSpeakerModal();
+            }
+        });
+        
         // Close modal on Escape key
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') {
                 closeModal();
+                closeSpeakerModal();
                 closeCodeOfConduct();
             }
         });
@@ -624,8 +763,11 @@
             }
         });
         
-        // Load schedule when page loads
-        document.addEventListener('DOMContentLoaded', loadSchedule);
+        // Load schedule and speakers when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            loadSchedule();
+            loadSpeakers();
+        });
     </script>
 
 </body>
