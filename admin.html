@@ -490,7 +490,8 @@
             console.log('Saving data:', data);
             
             try {
-                const url = id ? `/api/schedule/${id}` : '/api/schedule';
+                // URL-encode the ID to handle special characters like hyphens
+                const url = id ? `/api/schedule/${encodeURIComponent(id)}` : '/api/schedule';
                 const method = id ? 'PUT' : 'POST';
                 
                 console.log('Request:', method, url);
@@ -525,7 +526,8 @@
             }
             
             try {
-                const response = await fetch(`/api/schedule/${id}`, {
+                // URL-encode the ID to handle special characters
+                const response = await fetch(`/api/schedule/${encodeURIComponent(id)}`, {
                     method: 'DELETE'
                 });
                 
