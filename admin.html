@@ -168,6 +168,17 @@
             background: var(--card);
             color: var(--text);
             font-size: 14px;
+            box-sizing: border-box;
+        }
+        
+        .form-group input[type="number"] {
+            -moz-appearance: textfield;
+        }
+        
+        .form-group input[type="number"]::-webkit-outer-spin-button,
+        .form-group input[type="number"]::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
         }
         
         .form-group textarea {
@@ -262,7 +273,7 @@
                 
                 <div class="form-group">
                     <label for="duration">Duration (seconds)</label>
-                    <input type="number" id="duration" min="0" value="0">
+                    <input type="number" id="duration" min="0" step="1" value="0" placeholder="e.g., 3600 for 1 hour">
                 </div>
                 
                 <div class="form-group">
