@@ -149,11 +149,28 @@
     <footer>
         <div class="footer-links">
             <a href="#">Privacy Policy</a>
-            <a href="#">Code of Conduct</a>
+            <a href="#" onclick="openCodeOfConduct(); return false;">Code of Conduct</a>
             <a href="https://azure.microsoft.com" target="_blank">Powered by Azure</a>
         </div>
         <p class="copyright">© 2026 Azure Core Underground. All rights reserved.</p>
     </footer>
+
+    <!-- Code of Conduct Modal -->
+    <div id="coc-modal" class="modal-overlay">
+        <div class="modal-content coc-modal-content">
+            <button class="modal-close" onclick="closeCodeOfConduct()">&times;</button>
+            <h2 class="modal-title">Microsoft Event Code of Conduct</h2>
+            <div class="coc-content">
+                <p>Microsoft's mission is to empower every person and every organization on the planet to achieve more. This includes Microsoft parties where we seek to create a respectful, friendly, fun and inclusive experience for all participants. We do not tolerate harassing or disrespectful behavior, messages, images, or interactions by any party participant, in any form, at any aspect of the program including business and social activities, regardless of location.</p>
+                
+                <p>We do not tolerate any behavior that is degrading to any gender, race, sexual orientation or disability, or any behavior that would violate the company's Anti-Harassment and Anti-Discrimination Policy, Equal Employment Opportunity Policy, or Standards of Business Conduct, even if the entertainment is not paid for by Microsoft. In short, the entire experience at the venue must meet our culture standards.</p>
+                
+                <p>We encourage everyone to assist in creating a welcoming and safe environment. Please report any concerns, harassing behavior, or suspicious or disruptive activity to venue staff, the event host or owner, or the nearest event staff. We also encourage employees to contact their Microsoft Manager or our Business Conduct Hotline (1-877-320-MSFT or <a href="mailto:buscond@microsoft.com">buscond@microsoft.com</a>) at any time if you feel a party is against our policy or inconsistent with the Microsoft culture. Outside the United States, call collect to 1-470-219-7087.</p>
+                
+                <p>Microsoft reserves the right to refuse admittance to or remove any person from a party at any time at its sole discretion. We make this policy visible for all Microsoft parties so all attendees can see what is expected and what steps they should take if they see or experience behavior not consistent with this policy.</p>
+            </div>
+        </div>
+    </div>
 
     <!-- Session Modal -->
     <div id="session-modal" class="modal-overlay">
@@ -502,6 +519,25 @@
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') {
                 closeModal();
+                closeCodeOfConduct();
+            }
+        });
+        
+        // Code of Conduct modal functions
+        function openCodeOfConduct() {
+            document.getElementById('coc-modal').classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+        
+        function closeCodeOfConduct() {
+            document.getElementById('coc-modal').classList.remove('active');
+            document.body.style.overflow = '';
+        }
+        
+        // Close COC modal on overlay click
+        document.getElementById('coc-modal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeCodeOfConduct();
             }
         });
         
