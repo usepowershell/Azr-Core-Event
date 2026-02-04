@@ -267,8 +267,11 @@
                 </div>
                 
                 <div class="form-group">
-                    <label for="startTime">Start Time (ISO format) *</label>
+                    <label for="startTime">Start Time (Eastern Time) *</label>
                     <input type="datetime-local" id="startTime" required>
+                    <small style="color: #6c757d; display: block; margin-top: 4px;">
+                        Enter time in Eastern Time (ET). Visitors will see this converted to their local timezone.
+                    </small>
                 </div>
                 
                 <div class="form-group">
@@ -410,7 +413,13 @@
             document.getElementById('item-id').value = id;
             document.getElementById('title').value = item.title;
             document.getElementById('videoId').value = item.videoId;
-            document.getElementById('startTime').value = item.startTime.slice(0, 16);
+            
+            // Convert stored time to datetime-local format in Eastern Time
+            // datetime-local needs YYYY-MM-DDTHH:MM format
+            const date = new Date(item.startTime);
+            const easternTime = date.toLocaleString('sv-SE', { timeZone: 'America/New_York' }).slice(0, 16);
+            document.getElementById('startTime').value = easternTime;
+            
             document.getElementById('duration').value = item.duration || 0;
             document.getElementById('description').value = item.description || '';
             document.getElementById('url').value = item.url || '';
@@ -435,12 +444,32 @@
                 return;
             }
             
-            // Format startTime - datetime-local gives YYYY-MM-DDTHH:MM, we need to add timezone
+            // Format startTime - datetime-local gives YYYY-MM-DDTHH:MM in local time
+            // We need to interpret this as Eastern Time and convert to ISO
             let startTime;
             try {
-                // Append EST timezone offset (-05:00) since the event is in Eastern time
-                startTime = startTimeValue + ':00-05:00';
+                // The datetime-local value is in Eastern Time (event timezone)
+                // Create a date string that explicitly specifies Eastern timezone
+                // Note: America/New_York handles EST/EDT automatically
+                const [datePart, timePart] = startTimeValue.split('T');
+                const [year, month, day] = datePart.split('-');
+                const [hour, minute] = timePart.split(':');
+                
+                // Create date in Eastern timezone and convert to ISO
+                const easternDate = new Date(Date.UTC(
+                    parseInt(year), 
+                    parseInt(month) - 1, 
+                    parseInt(day), 
+                    parseInt(hour), 
+                    parseInt(minute)
+                ));
+                
+                // Adjust for Eastern Time offset (EST = UTC-5, EDT = UTC-4)
+                // For February 2026, it's EST (UTC-5)
+                const estOffset = 5 * 60 * 60 * 1000; // 5 hours in milliseconds
+                startTime = new Date(easternDate.getTime() + estOffset).toISOString();
             } catch (e) {
+                console.error('Time parsing error:', e);
                 showMessage('Invalid start time format.', 'error');
                 return;
             }
