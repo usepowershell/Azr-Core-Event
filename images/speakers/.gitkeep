@@ -1,0 +1,8 @@
+# Speaker Headshots
+
+Place speaker headshot images in this folder.
+Naming convention: {speakerId}.jpg (or .png, .webp)
+
+Example: rick-claus-a1b2.jpg
+
+Images will be served at /images/speakers/{filename}

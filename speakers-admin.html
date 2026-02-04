@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Speakers Admin - Azure Core Underground</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .admin-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+        
+        .admin-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 32px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid #2b3a6b;
+        }
+        
+        .admin-header h1 {
+            margin: 0;
+            color: var(--primary-2);
+        }
+        
+        .header-actions {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: var(--primary-2);
+        }
+        
+        .btn-secondary {
+            background: #2b3a6b;
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background: #3d4f8a;
+        }
+        
+        .btn-success {
+            background: #10b981;
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background: #059669;
+        }
+        
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+        
+        .btn-small {
+            padding: 6px 12px;
+            font-size: 0.85rem;
+        }
+        
+        /* Speaker Grid */
+        .speakers-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        
+        .speaker-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid #2b3a6b;
+        }
+        
+        .speaker-card-header {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+        
+        .speaker-headshot {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            object-fit: cover;
+            background: #2b3a6b;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--muted);
+            font-size: 2rem;
+            flex-shrink: 0;
+        }
+        
+        .speaker-headshot img {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+        
+        .speaker-info {
+            flex: 1;
+            min-width: 0;
+        }
+        
+        .speaker-name {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--primary-2);
+            margin: 0 0 4px 0;
+        }
+        
+        .speaker-title {
+            color: var(--muted);
+            font-size: 0.9rem;
+            margin: 0;
+        }
+        
+        .speaker-company {
+            color: var(--text);
+            font-size: 0.85rem;
+            margin: 4px 0 0 0;
+        }
+        
+        .speaker-sessions {
+            background: #1a2744;
+            padding: 12px;
+            border-radius: 8px;
+            margin: 12px 0;
+        }
+        
+        .speaker-sessions-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            color: var(--muted);
+            margin-bottom: 4px;
+        }
+        
+        .speaker-sessions-count {
+            color: var(--primary-2);
+            font-weight: 600;
+        }
+        
+        .speaker-card-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+        }
+        
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal.active {
+            display: flex;
+        }
+        
+        .modal-content {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 32px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            border: 1px solid #2b3a6b;
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+        
+        .modal-header h2 {
+            margin: 0;
+            color: var(--primary-2);
+        }
+        
+        .modal-close {
+            background: none;
+            border: none;
+            color: var(--muted);
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+        
+        .modal-close:hover {
+            color: white;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--text);
+            font-weight: 500;
+        }
+        
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid #2b3a6b;
+            background: #1a2744;
+            color: var(--text);
+            font-size: 1rem;
+        }
+        
+        .form-group textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+        
+        .form-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            margin-top: 24px;
+        }
+        
+        .headshot-preview {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: #2b3a6b;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 10px 0;
+            overflow: hidden;
+        }
+        
+        .headshot-preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .headshot-hint {
+            font-size: 0.8rem;
+            color: var(--muted);
+            margin-top: 4px;
+        }
+        
+        /* Alerts */
+        .alert {
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .alert-success {
+            background: rgba(16, 185, 129, 0.2);
+            border: 1px solid #10b981;
+            color: #10b981;
+        }
+        
+        .alert-error {
+            background: rgba(239, 68, 68, 0.2);
+            border: 1px solid #ef4444;
+            color: #ef4444;
+        }
+        
+        .alert-info {
+            background: rgba(79, 70, 229, 0.2);
+            border: 1px solid var(--primary);
+            color: var(--primary-2);
+        }
+        
+        /* Loading */
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: var(--muted);
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--muted);
+        }
+        
+        .empty-state h3 {
+            color: var(--text);
+            margin-bottom: 12px;
+        }
+        
+        /* Stats bar */
+        .stats-bar {
+            display: flex;
+            gap: 24px;
+            margin-bottom: 24px;
+            padding: 16px;
+            background: var(--card-bg);
+            border-radius: 12px;
+        }
+        
+        .stat {
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--primary-2);
+        }
+        
+        .stat-label {
+            font-size: 0.85rem;
+            color: var(--muted);
+            text-transform: uppercase;
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-container">
+        <div class="admin-header">
+            <h1>🎤 Speakers Management</h1>
+            <div class="header-actions">
+                <a href="admin.html" class="btn btn-secondary">← Schedule Admin</a>
+                <button class="btn btn-success" onclick="extractSpeakers()">🔍 Extract from Schedule</button>
+                <button class="btn btn-primary" onclick="openAddModal()">+ Add Speaker</button>
+            </div>
+        </div>
+        
+        <div id="alertContainer"></div>
+        
+        <div class="stats-bar">
+            <div class="stat">
+                <div class="stat-value" id="totalSpeakers">0</div>
+                <div class="stat-label">Total Speakers</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value" id="withHeadshots">0</div>
+                <div class="stat-label">With Headshots</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value" id="withBio">0</div>
+                <div class="stat-label">With Bio</div>
+            </div>
+        </div>
+        
+        <div id="speakersContainer" class="speakers-grid">
+            <div class="loading">Loading speakers...</div>
+        </div>
+    </div>
+    
+    <!-- Add/Edit Modal -->
+    <div id="speakerModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">Add Speaker</h2>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            <form id="speakerForm" onsubmit="saveSpeaker(event)">
+                <input type="hidden" id="speakerId">
+                
+                <div class="form-group">
+                    <label for="name">Name *</label>
+                    <input type="text" id="name" required>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="title">Title/Role</label>
+                        <input type="text" id="title" placeholder="e.g., Principal Cloud Advocate">
+                    </div>
+                    <div class="form-group">
+                        <label for="company">Company</label>
+                        <input type="text" id="company" placeholder="e.g., Microsoft">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="bio">Bio</label>
+                    <textarea id="bio" placeholder="Short biography..."></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="headshotFile">Headshot Filename</label>
+                    <input type="text" id="headshotFile" placeholder="e.g., rick-claus.jpg">
+                    <div class="headshot-hint">
+                        Place image in /images/speakers/ folder. Recommended: 400x400px, JPG/PNG/WebP
+                    </div>
+                    <div class="headshot-preview" id="headshotPreview">
+                        <span style="color: var(--muted);">No image</span>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="linkedin">LinkedIn URL</label>
+                        <input type="url" id="linkedin" placeholder="https://linkedin.com/in/...">
+                    </div>
+                    <div class="form-group">
+                        <label for="twitter">Twitter/X URL</label>
+                        <input type="url" id="twitter" placeholder="https://twitter.com/...">
+                    </div>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Speaker</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        let speakers = [];
+        
+        // Load speakers on page load
+        document.addEventListener('DOMContentLoaded', loadSpeakers);
+        
+        // Preview headshot as user types
+        document.getElementById('headshotFile').addEventListener('input', function() {
+            updateHeadshotPreview(this.value);
+        });
+        
+        function updateHeadshotPreview(filename) {
+            const preview = document.getElementById('headshotPreview');
+            if (filename) {
+                preview.innerHTML = `<img src="/images/speakers/${filename}" onerror="this.parentElement.innerHTML='<span style=\\'color: var(--muted);\\'>Image not found</span>'"">`;
+            } else {
+                preview.innerHTML = '<span style="color: var(--muted);">No image</span>';
+            }
+        }
+        
+        async function loadSpeakers() {
+            try {
+                const response = await fetch('/api/speakers');
+                const data = await response.json();
+                speakers = data.speakers || [];
+                renderSpeakers();
+                updateStats();
+            } catch (error) {
+                console.error('Error loading speakers:', error);
+                showAlert('Failed to load speakers', 'error');
+            }
+        }
+        
+        function updateStats() {
+            document.getElementById('totalSpeakers').textContent = speakers.length;
+            document.getElementById('withHeadshots').textContent = speakers.filter(s => s.headshotFile).length;
+            document.getElementById('withBio').textContent = speakers.filter(s => s.bio).length;
+        }
+        
+        function renderSpeakers() {
+            const container = document.getElementById('speakersContainer');
+            
+            if (speakers.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state" style="grid-column: 1 / -1;">
+                        <h3>No speakers yet</h3>
+                        <p>Click "Extract from Schedule" to automatically extract speakers from session descriptions,<br>
+                        or click "Add Speaker" to add one manually.</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = speakers.map(speaker => `
+                <div class="speaker-card">
+                    <div class="speaker-card-header">
+                        <div class="speaker-headshot">
+                            ${speaker.headshotFile 
+                                ? `<img src="/images/speakers/${speaker.headshotFile}" onerror="this.parentElement.innerHTML='👤'" alt="${speaker.name}">`
+                                : '👤'
+                            }
+                        </div>
+                        <div class="speaker-info">
+                            <h3 class="speaker-name">${escapeHtml(speaker.name)}</h3>
+                            <p class="speaker-title">${escapeHtml(speaker.title) || '<em>No title</em>'}</p>
+                            <p class="speaker-company">${escapeHtml(speaker.company) || ''}</p>
+                        </div>
+                    </div>
+                    <div class="speaker-sessions">
+                        <div class="speaker-sessions-label">Sessions</div>
+                        <div class="speaker-sessions-count">${speaker.sessionIds?.length || 0} session(s)</div>
+                    </div>
+                    <div class="speaker-card-actions">
+                        <button class="btn btn-secondary btn-small" onclick="editSpeaker('${speaker.id}')">Edit</button>
+                        <button class="btn btn-danger btn-small" onclick="deleteSpeaker('${speaker.id}', '${escapeHtml(speaker.name)}')">Delete</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        function openAddModal() {
+            document.getElementById('modalTitle').textContent = 'Add Speaker';
+            document.getElementById('speakerForm').reset();
+            document.getElementById('speakerId').value = '';
+            updateHeadshotPreview('');
+            document.getElementById('speakerModal').classList.add('active');
+        }
+        
+        function editSpeaker(id) {
+            const speaker = speakers.find(s => s.id === id);
+            if (!speaker) return;
+            
+            document.getElementById('modalTitle').textContent = 'Edit Speaker';
+            document.getElementById('speakerId').value = speaker.id;
+            document.getElementById('name').value = speaker.name;
+            document.getElementById('title').value = speaker.title || '';
+            document.getElementById('company').value = speaker.company || '';
+            document.getElementById('bio').value = speaker.bio || '';
+            document.getElementById('headshotFile').value = speaker.headshotFile || '';
+            document.getElementById('linkedin').value = speaker.linkedin || '';
+            document.getElementById('twitter').value = speaker.twitter || '';
+            updateHeadshotPreview(speaker.headshotFile);
+            
+            document.getElementById('speakerModal').classList.add('active');
+        }
+        
+        function closeModal() {
+            document.getElementById('speakerModal').classList.remove('active');
+        }
+        
+        async function saveSpeaker(event) {
+            event.preventDefault();
+            
+            const id = document.getElementById('speakerId').value;
+            const speakerData = {
+                name: document.getElementById('name').value,
+                title: document.getElementById('title').value,
+                company: document.getElementById('company').value,
+                bio: document.getElementById('bio').value,
+                headshotFile: document.getElementById('headshotFile').value,
+                linkedin: document.getElementById('linkedin').value,
+                twitter: document.getElementById('twitter').value
+            };
+            
+            try {
+                let response;
+                if (id) {
+                    // Update existing
+                    response = await fetch(`/api/speakers/${encodeURIComponent(id)}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(speakerData)
+                    });
+                } else {
+                    // Create new
+                    response = await fetch('/api/speakers', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(speakerData)
+                    });
+                }
+                
+                if (response.ok) {
+                    showAlert(id ? 'Speaker updated!' : 'Speaker created!', 'success');
+                    closeModal();
+                    await loadSpeakers();
+                } else {
+                    const error = await response.json();
+                    showAlert(`Error: ${error.error || 'Unknown error'}`, 'error');
+                }
+            } catch (error) {
+                console.error('Error saving speaker:', error);
+                showAlert('Failed to save speaker', 'error');
+            }
+        }
+        
+        async function deleteSpeaker(id, name) {
+            if (!confirm(`Delete speaker "${name}"?`)) return;
+            
+            try {
+                const response = await fetch(`/api/speakers/${encodeURIComponent(id)}`, {
+                    method: 'DELETE'
+                });
+                
+                if (response.ok) {
+                    showAlert('Speaker deleted', 'success');
+                    await loadSpeakers();
+                } else {
+                    const error = await response.json();
+                    showAlert(`Error: ${error.error || 'Unknown error'}`, 'error');
+                }
+            } catch (error) {
+                console.error('Error deleting speaker:', error);
+                showAlert('Failed to delete speaker', 'error');
+            }
+        }
+        
+        async function extractSpeakers() {
+            if (!confirm('This will scan all session descriptions and extract speaker names. Continue?')) return;
+            
+            showAlert('Extracting speakers from schedule...', 'info');
+            
+            try {
+                const response = await fetch('/api/speakers/extract', {
+                    method: 'POST'
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    showAlert(`Extraction complete: ${result.created} created, ${result.updated} updated`, 'success');
+                    await loadSpeakers();
+                } else {
+                    showAlert(`Error: ${result.error || 'Unknown error'}`, 'error');
+                }
+            } catch (error) {
+                console.error('Error extracting speakers:', error);
+                showAlert('Failed to extract speakers', 'error');
+            }
+        }
+        
+        function showAlert(message, type) {
+            const container = document.getElementById('alertContainer');
+            const alert = document.createElement('div');
+            alert.className = `alert alert-${type}`;
+            alert.textContent = message;
+            container.innerHTML = '';
+            container.appendChild(alert);
+            
+            if (type !== 'info') {
+                setTimeout(() => alert.remove(), 5000);
+            }
+        }
+        
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+        // Close modal on outside click
+        document.getElementById('speakerModal').addEventListener('click', function(e) {
+            if (e.target === this) closeModal();
+        });
+        
+        // Close modal on Escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') closeModal();
+        });
+    </script>
+</body>
+</html>
