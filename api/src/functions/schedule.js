@@ -1,3 +1,4 @@
+const { app } = require("@azure/functions");
 const { TableClient } = require("@azure/data-tables");
 const { ManagedIdentityCredential } = require("@azure/identity");
 
@@ -433,71 +434,73 @@ async function importScheduleFromCsv(request, context) {
     }
 }
 
-// Route handler
-module.exports = async function (context, req) {
-    const method = req.method.toUpperCase();
-    // Decode the ID in case it was URL-encoded (for IDs with special characters like hyphens)
-    const rawId = context.bindingData?.id || req.params?.id;
-    const id = rawId ? decodeURIComponent(rawId) : null;
-    
-    // Check for query parameters
-    const format = req.query?.format || req.query?.Format;
-    const action = req.query?.action || req.query?.Action;
-    
-    // Wrap req to have consistent interface
-    const request = {
-        method: req.method,
+// Helper to handle request wrapper for v4
+function wrapRequest(request, id) {
+    return {
+        method: request.method,
         params: { id },
-        json: async () => req.body,
-        text: async () => (typeof req.body === 'string' ? req.body : JSON.stringify(req.body))
+        query: Object.fromEntries(new URL(request.url).searchParams),
+        json: () => request.json(),
+        text: () => request.text()
     };
-    
-    let result;
-    switch (method) {
-        case "GET":
-            if (format === 'csv') {
-                result = await exportScheduleAsCsv(request, context);
-            } else {
-                result = await getSchedule(request, context);
-            }
-            break;
-        case "POST":
-            if (action === 'import') {
-                result = await importScheduleFromCsv(request, context);
-            } else {
-                result = await addScheduleItem(request, context);
-            }
-            break;
-        case "PUT":
-            if (!id) {
-                result = { status: 400, jsonBody: { error: "ID required for update" } };
-            } else {
-                result = await updateScheduleItem(request, context);
-            }
-            break;
-        case "DELETE":
-            if (!id) {
-                result = { status: 400, jsonBody: { error: "ID required for delete" } };
-            } else {
-                result = await deleteScheduleItem(request, context);
-            }
-            break;
-        default:
-            result = { status: 405, jsonBody: { error: "Method not allowed" } };
+}
+
+// Register routes using v4 programming model
+app.http("getSchedule", {
+    methods: ["GET"],
+    authLevel: "anonymous",
+    route: "schedule",
+    handler: async (request, context) => {
+        const url = new URL(request.url);
+        const format = url.searchParams.get('format');
+        
+        if (format === 'csv') {
+            return exportScheduleAsCsv(wrapRequest(request), context);
+        }
+        return getSchedule(wrapRequest(request), context);
     }
-    
-    // Handle raw responses (like CSV)
-    if (result.isRaw) {
-        context.res = {
-            status: result.status,
-            headers: result.headers,
-            body: result.body
-        };
-    } else {
-        context.res = {
-            status: result.status,
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(result.jsonBody)
-        };
+});
+
+app.http("addScheduleItem", {
+    methods: ["POST"],
+    authLevel: "anonymous",
+    route: "schedule",
+    handler: async (request, context) => {
+        const url = new URL(request.url);
+        const action = url.searchParams.get('action');
+        
+        if (action === 'import') {
+            return importScheduleFromCsv(wrapRequest(request), context);
+        }
+        return addScheduleItem(wrapRequest(request), context);
     }
+});
+
+app.http("updateScheduleItem", {
+    methods: ["PUT"],
+    authLevel: "anonymous",
+    route: "schedule/{id}",
+    handler: async (request, context) => {
+        const id = decodeURIComponent(request.params.id);
+        return updateScheduleItem(wrapRequest(request, id), context);
+    }
+});
+
+app.http("deleteScheduleItem", {
+    methods: ["DELETE"],
+    authLevel: "anonymous",
+    route: "schedule/{id}",
+    handler: async (request, context) => {
+        const id = decodeURIComponent(request.params.id);
+        return deleteScheduleItem(wrapRequest(request, id), context);
+    }
+});
+
+module.exports = {
+    getSchedule,
+    addScheduleItem,
+    updateScheduleItem,
+    deleteScheduleItem,
+    exportScheduleAsCsv,
+    importScheduleFromCsv
 };
