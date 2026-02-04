@@ -554,7 +554,7 @@
         async function exportSchedule() {
             try {
                 showMessage('Exporting schedule...');
-                const response = await fetch('/api/schedule/export');
+                const response = await fetch('/api/schedule-io/export');
                 
                 if (!response.ok) {
                     throw new Error('Failed to export');
@@ -594,7 +594,7 @@
                 
                 const content = await file.text();
                 
-                const response = await fetch('/api/schedule/import', {
+                const response = await fetch('/api/schedule-io/import', {
                     method: 'POST',
                     headers: { 'Content-Type': 'text/csv' },
                     body: content

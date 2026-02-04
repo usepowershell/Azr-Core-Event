@@ -5,13 +5,7 @@
       "allowedRoles": ["authenticated"]
     },
     {
-      "route": "/api/schedule/export",
-      "methods": ["GET"],
-      "allowedRoles": ["authenticated"]
-    },
-    {
-      "route": "/api/schedule/import",
-      "methods": ["POST"],
+      "route": "/api/schedule-io/*",
       "allowedRoles": ["authenticated"]
     },
     {

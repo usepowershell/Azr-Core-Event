@@ -6,7 +6,7 @@
       "direction": "in",
       "name": "req",
       "methods": ["get", "post"],
-      "route": "schedule/{action}"
+      "route": "schedule-io/{action}"
     },
     {
       "type": "http",
