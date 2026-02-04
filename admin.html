@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Azure Core Underground</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .admin-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+        
+        .admin-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 32px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid #2b3a6b;
+        }
+        
+        .admin-header h1 {
+            margin: 0;
+            color: var(--primary-2);
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        
+        .user-info span {
+            color: var(--muted);
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+        
+        .btn-secondary {
+            background: transparent;
+            border: 1px solid #2b3a6b;
+            color: var(--text);
+        }
+        
+        .btn-danger {
+            background: #dc2626;
+            color: white;
+        }
+        
+        .btn:hover {
+            opacity: 0.9;
+        }
+        
+        .schedule-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 24px;
+        }
+        
+        .schedule-table th,
+        .schedule-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #2b3a6b;
+        }
+        
+        .schedule-table th {
+            background: var(--surface);
+            color: var(--primary-2);
+            font-weight: 600;
+        }
+        
+        .schedule-table tr:hover {
+            background: var(--surface);
+        }
+        
+        .actions {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .actions button {
+            padding: 6px 12px;
+            font-size: 12px;
+        }
+        
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal.active {
+            display: flex;
+        }
+        
+        .modal-content {
+            background: var(--surface);
+            border: 1px solid #2b3a6b;
+            border-radius: 12px;
+            padding: 32px;
+            width: 100%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+        
+        .modal-header h2 {
+            margin: 0;
+            color: var(--primary-2);
+        }
+        
+        .close-btn {
+            background: none;
+            border: none;
+            color: var(--muted);
+            font-size: 24px;
+            cursor: pointer;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--text);
+            font-weight: 500;
+        }
+        
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid #2b3a6b;
+            background: var(--card);
+            color: var(--text);
+            font-size: 14px;
+        }
+        
+        .form-group textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+        
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--primary-2);
+        }
+        
+        .form-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+            margin-top: 24px;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 48px;
+            color: var(--muted);
+        }
+        
+        .message {
+            padding: 12px 20px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+        }
+        
+        .message.success {
+            background: rgba(34, 197, 94, 0.2);
+            border: 1px solid #22c55e;
+            color: #22c55e;
+        }
+        
+        .message.error {
+            background: rgba(220, 38, 38, 0.2);
+            border: 1px solid #dc2626;
+            color: #dc2626;
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-container">
+        <div class="admin-header">
+            <h1>📅 Schedule Manager</h1>
+            <div class="user-info">
+                <span id="user-name">Loading...</span>
+                <a href="/.auth/logout" class="btn btn-secondary">Logout</a>
+                <a href="/" class="btn btn-secondary">← Back to Site</a>
+            </div>
+        </div>
+        
+        <div id="message-container"></div>
+        
+        <div>
+            <button class="btn btn-primary" onclick="openAddModal()">+ Add Schedule Item</button>
+        </div>
+        
+        <div id="schedule-container">
+            <div class="loading">Loading schedule...</div>
+        </div>
+    </div>
+    
+    <!-- Add/Edit Modal -->
+    <div id="schedule-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modal-title">Add Schedule Item</h2>
+                <button class="close-btn" onclick="closeModal()">&times;</button>
+            </div>
+            <form id="schedule-form" onsubmit="saveScheduleItem(event)">
+                <input type="hidden" id="item-id">
+                
+                <div class="form-group">
+                    <label for="title">Title *</label>
+                    <input type="text" id="title" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="videoId">YouTube Video ID *</label>
+                    <input type="text" id="videoId" required placeholder="e.g., dQw4w9WgXcQ">
+                </div>
+                
+                <div class="form-group">
+                    <label for="startTime">Start Time (ISO format) *</label>
+                    <input type="datetime-local" id="startTime" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="duration">Duration (seconds)</label>
+                    <input type="number" id="duration" min="0" value="0">
+                </div>
+                
+                <div class="form-group">
+                    <label for="description">Description</label>
+                    <textarea id="description" placeholder="Session description..."></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="url">YouTube URL (optional)</label>
+                    <input type="url" id="url" placeholder="https://www.youtube.com/watch?v=...">
+                </div>
+                
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <script>
+        let scheduleData = [];
+        
+        // Get user info
+        async function getUserInfo() {
+            try {
+                const response = await fetch('/.auth/me');
+                const data = await response.json();
+                if (data.clientPrincipal) {
+                    document.getElementById('user-name').textContent = 
+                        data.clientPrincipal.userDetails || data.clientPrincipal.userId;
+                }
+            } catch (error) {
+                console.error('Error fetching user info:', error);
+            }
+        }
+        
+        // Show message
+        function showMessage(text, type = 'success') {
+            const container = document.getElementById('message-container');
+            container.innerHTML = `<div class="message ${type}">${text}</div>`;
+            setTimeout(() => container.innerHTML = '', 5000);
+        }
+        
+        // Load schedule
+        async function loadSchedule() {
+            try {
+                const response = await fetch('/api/schedule');
+                const data = await response.json();
+                scheduleData = data.schedule || [];
+                renderSchedule();
+            } catch (error) {
+                console.error('Error loading schedule:', error);
+                document.getElementById('schedule-container').innerHTML = 
+                    '<div class="message error">Failed to load schedule. Make sure the API is configured.</div>';
+            }
+        }
+        
+        // Render schedule table
+        function renderSchedule() {
+            if (scheduleData.length === 0) {
+                document.getElementById('schedule-container').innerHTML = 
+                    '<p style="color: var(--muted); text-align: center; padding: 48px;">No schedule items yet. Click "Add Schedule Item" to get started.</p>';
+                return;
+            }
+            
+            const html = `
+                <table class="schedule-table">
+                    <thead>
+                        <tr>
+                            <th>Title</th>
+                            <th>Video ID</th>
+                            <th>Start Time</th>
+                            <th>Duration</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${scheduleData.map(item => `
+                            <tr>
+                                <td>${escapeHtml(item.title)}</td>
+                                <td><code>${escapeHtml(item.videoId)}</code></td>
+                                <td>${formatDate(item.startTime)}</td>
+                                <td>${formatDuration(item.duration)}</td>
+                                <td class="actions">
+                                    <button class="btn btn-secondary" onclick="editItem('${item.id}')">Edit</button>
+                                    <button class="btn btn-danger" onclick="deleteItem('${item.id}')">Delete</button>
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+            document.getElementById('schedule-container').innerHTML = html;
+        }
+        
+        // Helper functions
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+        function formatDate(isoString) {
+            return new Date(isoString).toLocaleString('en-US', {
+                month: 'short',
+                day: 'numeric',
+                hour: 'numeric',
+                minute: '2-digit',
+                timeZoneName: 'short'
+            });
+        }
+        
+        function formatDuration(seconds) {
+            if (!seconds) return '-';
+            const mins = Math.floor(seconds / 60);
+            const secs = seconds % 60;
+            return `${mins}:${secs.toString().padStart(2, '0')}`;
+        }
+        
+        // Modal functions
+        function openAddModal() {
+            document.getElementById('modal-title').textContent = 'Add Schedule Item';
+            document.getElementById('schedule-form').reset();
+            document.getElementById('item-id').value = '';
+            document.getElementById('schedule-modal').classList.add('active');
+        }
+        
+        function editItem(id) {
+            const item = scheduleData.find(i => i.id === id);
+            if (!item) return;
+            
+            document.getElementById('modal-title').textContent = 'Edit Schedule Item';
+            document.getElementById('item-id').value = id;
+            document.getElementById('title').value = item.title;
+            document.getElementById('videoId').value = item.videoId;
+            document.getElementById('startTime').value = item.startTime.slice(0, 16);
+            document.getElementById('duration').value = item.duration || 0;
+            document.getElementById('description').value = item.description || '';
+            document.getElementById('url').value = item.url || '';
+            
+            document.getElementById('schedule-modal').classList.add('active');
+        }
+        
+        function closeModal() {
+            document.getElementById('schedule-modal').classList.remove('active');
+        }
+        
+        // Save schedule item
+        async function saveScheduleItem(event) {
+            event.preventDefault();
+            
+            const id = document.getElementById('item-id').value;
+            const data = {
+                title: document.getElementById('title').value,
+                videoId: document.getElementById('videoId').value,
+                startTime: new Date(document.getElementById('startTime').value).toISOString(),
+                duration: parseInt(document.getElementById('duration').value) || 0,
+                description: document.getElementById('description').value,
+                url: document.getElementById('url').value || `https://www.youtube.com/watch?v=${document.getElementById('videoId').value}`
+            };
+            
+            try {
+                const url = id ? `/api/schedule/${id}` : '/api/schedule';
+                const method = id ? 'PUT' : 'POST';
+                
+                const response = await fetch(url, {
+                    method: method,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Failed to save');
+                }
+                
+                closeModal();
+                showMessage(id ? 'Schedule item updated!' : 'Schedule item added!');
+                loadSchedule();
+            } catch (error) {
+                console.error('Error saving:', error);
+                showMessage('Failed to save schedule item. Please try again.', 'error');
+            }
+        }
+        
+        // Delete schedule item
+        async function deleteItem(id) {
+            if (!confirm('Are you sure you want to delete this schedule item?')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/schedule/${id}`, {
+                    method: 'DELETE'
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Failed to delete');
+                }
+                
+                showMessage('Schedule item deleted!');
+                loadSchedule();
+            } catch (error) {
+                console.error('Error deleting:', error);
+                showMessage('Failed to delete schedule item. Please try again.', 'error');
+            }
+        }
+        
+        // Initialize
+        getUserInfo();
+        loadSchedule();
+    </script>
+</body>
+</html>

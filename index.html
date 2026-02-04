@@ -5,265 +5,31 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Azure Core Underground 2026</title>
     <link rel="stylesheet" href="styles.css">
-    <style>
-        /* Additional styles for the conference site */
-        nav {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 16px 24px;
-            background: var(--surface);
-            border-bottom: 1px solid #1c2544;
-            position: sticky;
-            top: 0;
-            z-index: 100;
-        }
-        nav .logo-text {
-            font-size: 20px;
-            font-weight: bold;
-            color: var(--primary-2);
-        }
-        nav ul {
-            display: flex;
-            list-style: none;
-            margin: 0;
-            padding: 0;
-            gap: 24px;
-        }
-        nav ul li a {
-            color: var(--text);
-            text-decoration: none;
-            font-weight: 500;
-            transition: color 0.2s;
-        }
-        nav ul li a:hover {
-            color: var(--primary-2);
-        }
-        
-        section {
-            padding: 64px 24px;
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-        
-        section h2 {
-            font-size: 36px;
-            text-align: center;
-            margin-bottom: 16px;
-            color: var(--primary-2);
-        }
-        
-        section .section-subtitle {
-            text-align: center;
-            color: var(--muted);
-            margin-bottom: 48px;
-            max-width: 700px;
-            margin-left: auto;
-            margin-right: auto;
-        }
-        
-        .features-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 24px;
-        }
-        
-        .feature-card {
-            background: var(--card);
-            border-radius: 12px;
-            padding: 24px;
-            border: 1px solid #2b3a6b;
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
-        
-        .feature-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 8px 24px rgba(0, 161, 255, 0.15);
-        }
-        
-        .feature-card h3 {
-            color: var(--primary-2);
-            margin-top: 0;
-        }
-        
-        .feature-card p {
-            color: var(--muted);
-            line-height: 1.6;
-        }
-        
-        .schedule-list {
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-        }
-        
-        .schedule-item {
-            background: var(--card);
-            border-radius: 12px;
-            padding: 24px;
-            border: 1px solid #2b3a6b;
-            display: flex;
-            gap: 24px;
-            align-items: flex-start;
-        }
-        
-        .schedule-time {
-            min-width: 120px;
-            color: var(--primary-2);
-            font-weight: bold;
-            font-size: 14px;
-        }
-        
-        .schedule-content h4 {
-            margin: 0 0 8px;
-            color: var(--text);
-        }
-        
-        .schedule-content p {
-            margin: 0;
-            color: var(--muted);
-            font-size: 14px;
-            line-height: 1.5;
-        }
-        
-        .speakers-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 32px;
-        }
-        
-        .speaker-card {
-            text-align: center;
-        }
-        
-        .speaker-avatar {
-            width: 120px;
-            height: 120px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, var(--primary), var(--primary-2));
-            margin: 0 auto 16px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 48px;
-            color: white;
-        }
-        
-        .speaker-card h4 {
-            margin: 0 0 4px;
-            color: var(--text);
-        }
-        
-        .speaker-card p {
-            margin: 0;
-            color: var(--muted);
-            font-size: 14px;
-        }
-        
-        .sponsors-section {
-            background: var(--surface);
-            border-top: 1px solid #1c2544;
-            border-bottom: 1px solid #1c2544;
-        }
-        
-        .sponsors-grid {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 48px;
-            align-items: center;
-        }
-        
-        .sponsor-logo {
-            background: var(--card);
-            padding: 24px 32px;
-            border-radius: 8px;
-            border: 1px solid #2b3a6b;
-            color: var(--muted);
-            font-weight: 600;
-        }
-        
-        footer {
-            background: var(--surface);
-            border-top: 1px solid #1c2544;
-            padding: 48px 24px;
-            text-align: center;
-        }
-        
-        footer .footer-links {
-            display: flex;
-            justify-content: center;
-            gap: 24px;
-            margin-bottom: 24px;
-            flex-wrap: wrap;
-        }
-        
-        footer .footer-links a {
-            color: var(--muted);
-            text-decoration: none;
-            transition: color 0.2s;
-        }
-        
-        footer .footer-links a:hover {
-            color: var(--primary-2);
-        }
-        
-        footer .copyright {
-            color: var(--muted);
-            font-size: 14px;
-        }
-        
-        .cta-section {
-            text-align: center;
-            background: radial-gradient(800px 400px at 50% 50%, rgba(38,112,255,0.2), transparent 70%);
-        }
-        
-        @media (max-width: 768px) {
-            nav {
-                flex-direction: column;
-                gap: 16px;
-            }
-            nav ul {
-                flex-wrap: wrap;
-                justify-content: center;
-            }
-            .schedule-item {
-                flex-direction: column;
-                gap: 8px;
-            }
-            .hero h1 {
-                font-size: 28px;
-            }
-        }
-    </style>
 </head>
 <body>
-    <!-- Navigation -->
-    <nav>
-        <div class="logo-text">Azure Core Underground</div>
-        <ul>
-            <li><a href="#about">About</a></li>
-            <li><a href="#schedule">Schedule</a></li>
-            <li><a href="#speakers">Speakers</a></li>
-            <li><a href="#sponsors">Sponsors</a></li>
-        </ul>
-    </nav>
-
     <!-- Hero Section -->
     <section class="hero">
         <h1>Azure Core Underground 2026</h1>
-        <p class="tagline">The premier virtual event for Azure infrastructure professionals</p>
-        
-        <div class="schedule-start">February 3-4, 2026 | Free Virtual Event</div>
-        
-        <div class="clock-container">
-            <span class="video-clock" id="event-clock">--:--:--</span>
-            <span class="timezone">ET</span>
-        </div>
+        <p class="tagline">Azure Core Underground - a community event focused on compute, network, and storage in Azure.</p>
         
         <div>
-            <a href="#schedule" class="cta">View Schedule</a>
-            <a href="https://www.youtube.com/@yourChannel" class="cta secondary" target="_blank">Watch on YouTube</a>
+            <a href="#about" class="cta">About</a>
+            <a href="#schedule" class="cta">Schedule</a>
+            <a href="#speakers" class="cta">Speakers</a>
+            <a href="#sponsors" class="cta">Sponsors</a>
+        </div>
+    </section>
+
+    <!-- Video Player Section -->
+    <section id="video" class="video-section">
+        <div class="video-container">
+            <iframe 
+                src="https://www.youtube.com/embed/dQw4w9WgXcQ" 
+                title="Azure Core Underground Live Stream"
+                frameborder="0" 
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+                allowfullscreen>
+            </iframe>
         </div>
     </section>
 
@@ -424,21 +190,5 @@
         <p class="copyright">© 2026 Azure Core Underground. All rights reserved.</p>
     </footer>
 
-    <script>
-        // Simple clock script
-        function updateClock() {
-            const now = new Date();
-            const options = { 
-                hour: '2-digit', 
-                minute: '2-digit', 
-                second: '2-digit', 
-                hour12: false,
-                timeZone: 'America/New_York'
-            };
-            document.getElementById('event-clock').textContent = now.toLocaleTimeString('en-US', options);
-        }
-        updateClock();
-        setInterval(updateClock, 1000);
-    </script>
 </body>
 </html>
