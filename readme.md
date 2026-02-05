@@ -2,7 +2,7 @@
 
 A community conference website for Azure infrastructure professionals, featuring dynamic schedule management, YouTube video integration, and speaker profiles.
 
-**Live Site:** <https://lemon-beach-0a645ad0f.4.azurestaticapps.net>
+**Live Site:** <https://www.azurecoreunderground.com/>
 
 ## Features
 
