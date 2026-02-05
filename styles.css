@@ -627,20 +627,18 @@ section .section-subtitle {
 .schedule-days {
   display: flex;
   flex-wrap: nowrap;
-  gap: 24px;
+  gap: 20px;
   padding: 0 10%;
-  overflow-x: auto;
-  scroll-snap-type: x proximity;
 }
 
 .schedule-day {
   background: var(--surface);
   border-radius: 12px;
   border: 1px solid #2b3a6b;
-  padding: 24px;
+  padding: 20px;
   flex: 1 1 0;
-  min-width: 300px;
-  scroll-snap-align: start;
+  min-width: 0;
+  max-width: calc((80% - 60px) / 4);
 }
 
 .schedule-day h3 {
@@ -649,19 +647,30 @@ section .section-subtitle {
   padding-bottom: 12px;
   border-bottom: 1px solid #2b3a6b;
   text-align: center;
-  font-size: 1.1rem;
+  font-size: 1rem;
   white-space: nowrap;
 }
 
 .day-sessions {
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  max-height: 600px;
-  overflow-y: auto;
+  gap: 12px;
 }
 
 /* Responsive: stack on smaller screens */
+@media (max-width: 1200px) {
+  .schedule-days {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  
+  .schedule-day {
+    flex: 1 1 calc(50% - 12px);
+    max-width: calc(50% - 12px);
+    min-width: 280px;
+  }
+}
+
 @media (max-width: 768px) {
   .schedule-days {
     flex-direction: column;
@@ -669,11 +678,9 @@ section .section-subtitle {
   }
   
   .schedule-day {
+    flex: 1 1 100%;
+    max-width: 100%;
     min-width: unset;
-  }
-  
-  .day-sessions {
-    max-height: none;
   }
 }
 
