@@ -504,26 +504,36 @@ async function importPlaylist(request, context) {
         
         context.log(`Found ${playlistItems.length} videos in playlist`);
         
-        // Get video details for duration
-        const videoIds = playlistItems.map(item => item.contentDetails.videoId).join(',');
-        const videosUrl = `https://www.googleapis.com/youtube/v3/videos?part=contentDetails,snippet&id=${videoIds}&key=${apiKey}`;
-        const videosResponse = await fetch(videosUrl);
-        const videosData = await videosResponse.json();
-        
-        // Create a map of video durations
+        // Get video details for duration (batch in groups of 50)
         const videoDurations = {};
-        for (const video of videosData.items || []) {
-            // Parse ISO 8601 duration (PT1H2M3S)
-            const duration = video.contentDetails.duration;
-            let seconds = 0;
-            const hours = duration.match(/(\d+)H/);
-            const minutes = duration.match(/(\d+)M/);
-            const secs = duration.match(/(\d+)S/);
-            if (hours) seconds += parseInt(hours[1]) * 3600;
-            if (minutes) seconds += parseInt(minutes[1]) * 60;
-            if (secs) seconds += parseInt(secs[1]);
-            videoDurations[video.id] = seconds;
+        const allVideoIds = playlistItems.map(item => item.contentDetails.videoId);
+        
+        for (let i = 0; i < allVideoIds.length; i += 50) {
+            const batchIds = allVideoIds.slice(i, i + 50).join(',');
+            const videosUrl = `https://www.googleapis.com/youtube/v3/videos?part=contentDetails&id=${batchIds}&key=${apiKey}`;
+            
+            try {
+                const videosResponse = await fetch(videosUrl);
+                const videosData = await videosResponse.json();
+                
+                for (const video of videosData.items || []) {
+                    // Parse ISO 8601 duration (PT1H2M3S)
+                    const duration = video.contentDetails.duration;
+                    let seconds = 0;
+                    const hours = duration.match(/(\d+)H/);
+                    const minutes = duration.match(/(\d+)M/);
+                    const secs = duration.match(/(\d+)S/);
+                    if (hours) seconds += parseInt(hours[1]) * 3600;
+                    if (minutes) seconds += parseInt(minutes[1]) * 60;
+                    if (secs) seconds += parseInt(secs[1]);
+                    videoDurations[video.id] = seconds;
+                }
+            } catch (durationError) {
+                context.log("Error fetching video durations:", durationError);
+            }
         }
+        
+        context.log(`Fetched durations for ${Object.keys(videoDurations).length} videos`);
         
         // Create schedule items
         const client = getTableClient();
