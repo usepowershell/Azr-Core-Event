@@ -628,7 +628,7 @@ section .section-subtitle {
   display: flex;
   flex-wrap: wrap;
   gap: 16px;
-  padding: 0 10%;
+  padding: 0 5%;
   justify-content: center;
 }
 
@@ -638,8 +638,8 @@ section .section-subtitle {
   border: 1px solid #2b3a6b;
   padding: 24px;
   flex: 1 1 calc(25% - 16px);
-  min-width: 220px;
-  max-width: calc(25% - 12px);
+  min-width: 280px;
+  max-width: 400px;
 }
 
 .schedule-day h3 {
