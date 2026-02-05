@@ -102,10 +102,10 @@
                 </div>
                 
                 <div class="form-group">
-                    <label for="api-key">YouTube API Key *</label>
-                    <input type="password" id="api-key" required placeholder="Your YouTube Data API v3 key">
+                    <label for="api-key">YouTube API Key (optional)</label>
+                    <input type="password" id="api-key" placeholder="Leave blank to use stored key">
                     <small style="color: #6c757d; display: block; margin-top: 4px;">
-                        Get a free API key from <a href="https://console.developers.google.com/" target="_blank" style="color: var(--primary-2);">Google Cloud Console</a>. Enable the YouTube Data API v3.
+                        A default API key is configured. Only enter a key here if you want to use a different one.
                     </small>
                 </div>
                 
@@ -578,11 +578,6 @@
                 return;
             }
             
-            if (!apiKey) {
-                showMessage('Please enter your YouTube API key.', 'error');
-                return;
-            }
-            
             const previewDiv = document.getElementById('playlist-preview');
             const statusDiv = document.getElementById('playlist-status');
             const importBtn = document.getElementById('import-playlist-btn');
@@ -593,15 +588,21 @@
             importBtn.textContent = 'Importing...';
             
             try {
+                const requestBody = {
+                    playlistId,
+                    startDate,
+                    sessionDuration: sessionGap
+                };
+                
+                // Only include apiKey if provided (otherwise server uses stored key)
+                if (apiKey) {
+                    requestBody.apiKey = apiKey;
+                }
+                
                 const response = await fetch('/api/schedule?action=playlist', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        playlistId,
-                        apiKey,
-                        startDate,
-                        sessionDuration: sessionGap
-                    })
+                    body: JSON.stringify(requestBody)
                 });
                 
                 const result = await response.json();
