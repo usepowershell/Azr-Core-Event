@@ -625,10 +625,12 @@ section .section-subtitle {
 
 /* Schedule Days Layout */
 .schedule-days {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+  display: flex;
+  flex-wrap: nowrap;
   gap: 24px;
-  padding: 0 24px;
+  padding: 0 10%;
+  overflow-x: auto;
+  scroll-snap-type: x proximity;
 }
 
 .schedule-day {
@@ -636,6 +638,9 @@ section .section-subtitle {
   border-radius: 12px;
   border: 1px solid #2b3a6b;
   padding: 24px;
+  flex: 1 1 0;
+  min-width: 300px;
+  scroll-snap-align: start;
 }
 
 .schedule-day h3 {
@@ -643,53 +648,82 @@ section .section-subtitle {
   margin: 0 0 16px;
   padding-bottom: 12px;
   border-bottom: 1px solid #2b3a6b;
+  text-align: center;
+  font-size: 1.1rem;
+  white-space: nowrap;
 }
 
 .day-sessions {
   display: flex;
   flex-direction: column;
   gap: 16px;
+  max-height: 600px;
+  overflow-y: auto;
+}
+
+/* Responsive: stack on smaller screens */
+@media (max-width: 768px) {
+  .schedule-days {
+    flex-direction: column;
+    padding: 0 5%;
+  }
+  
+  .schedule-day {
+    min-width: unset;
+  }
+  
+  .day-sessions {
+    max-height: none;
+  }
 }
 
 .session-card {
   background: var(--card);
   border-radius: 8px;
-  padding: 16px;
+  padding: 12px 16px;
   border: 1px solid #2b3a6b;
-  height: 160px;
+  min-height: 100px;
   display: flex;
   flex-direction: column;
   cursor: pointer;
-  transition: border-color 0.2s, transform 0.2s;
+  transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s;
   overflow: hidden;
 }
 
 .session-card:hover {
   border-color: var(--primary-2);
   transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(38, 112, 255, 0.15);
 }
 
 .session-card .session-time {
   color: var(--primary-2);
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
 }
 
 .session-card h4 {
-  margin: 0 0 8px;
-  font-size: 16px;
-  line-height: 1.4;
+  margin: 0 0 6px;
+  font-size: 14px;
+  line-height: 1.3;
   flex-shrink: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .session-card p {
   color: var(--muted);
-  font-size: 14px;
+  font-size: 12px;
   margin: 0;
-  line-height: 1.5;
+  line-height: 1.4;
   flex-grow: 1;
   overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
 }
 
 /* Session Modal */
