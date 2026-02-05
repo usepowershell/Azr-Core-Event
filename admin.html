@@ -607,7 +607,12 @@
                 const result = await response.json();
                 
                 if (!response.ok) {
-                    throw new Error(result.error || result.details || 'Import failed');
+                    // Show both error and details if available
+                    let errorMsg = result.error || 'Import failed';
+                    if (result.details) {
+                        errorMsg += ': ' + result.details;
+                    }
+                    throw new Error(errorMsg);
                 }
                 
                 let statusHtml = `<p style="color: #22c55e;">✅ Successfully imported ${result.created} videos!</p>`;
