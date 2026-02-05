@@ -466,18 +466,39 @@ async function importPlaylist(request, context) {
         do {
             const url = `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet,contentDetails&maxResults=50&playlistId=${playlistId}&key=${apiKey}${nextPageToken ? `&pageToken=${nextPageToken}` : ''}`;
             
-            const response = await fetch(url);
-            if (!response.ok) {
-                const error = await response.json();
-                context.log("YouTube API error:", error);
+            context.log("Fetching URL:", url.replace(apiKey, 'API_KEY_HIDDEN'));
+            
+            let response;
+            try {
+                response = await fetch(url);
+            } catch (fetchError) {
+                context.log("Fetch error:", fetchError);
                 return {
-                    status: 400,
-                    jsonBody: { error: "Failed to fetch playlist from YouTube", details: error.error?.message || "Unknown error" }
+                    status: 500,
+                    jsonBody: { error: "Network error fetching from YouTube", details: fetchError.message }
                 };
             }
             
-            const data = await response.json();
-            playlistItems.push(...data.items);
+            const responseText = await response.text();
+            context.log("Response status:", response.status);
+            
+            if (!response.ok) {
+                let errorDetails = responseText;
+                try {
+                    const errorJson = JSON.parse(responseText);
+                    errorDetails = errorJson.error?.message || errorJson.error?.errors?.[0]?.message || responseText;
+                } catch (e) {
+                    // Keep responseText as errorDetails
+                }
+                context.log("YouTube API error:", errorDetails);
+                return {
+                    status: 400,
+                    jsonBody: { error: "Failed to fetch playlist from YouTube", details: errorDetails }
+                };
+            }
+            
+            const data = JSON.parse(responseText);
+            playlistItems.push(...(data.items || []));
             nextPageToken = data.nextPageToken;
         } while (nextPageToken);
         

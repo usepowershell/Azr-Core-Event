@@ -10,6 +10,7 @@ A community conference website for Azure infrastructure professionals, featuring
 
 #### Hero & Navigation
 
+- **ACU Logo** - Conference logo displayed prominently above the title
 - Conference branding and tagline
 - Quick navigation to About, Schedule, Speakers, and Sponsors sections
 
@@ -79,6 +80,17 @@ A community conference website for Azure infrastructure professionals, featuring
   - Creates new sessions or updates existing (by sessionId)
   - Validates required columns (videoId, title, startTime)
   - Reports success/error counts
+
+#### YouTube Playlist Import
+
+- **Import from YouTube Playlist** - Bulk import videos from any public YouTube playlist
+  - Enter playlist URL or ID
+  - Requires YouTube Data API v3 key (free from Google Cloud Console)
+  - Set first session start time and gap between sessions
+  - Automatically fetches video titles, descriptions, and durations
+  - Creates sequential schedule entries with proper timing
+  - Skips private/deleted videos
+  - Shows detailed import progress and results
 
 #### Navigation
 
@@ -174,6 +186,7 @@ A community conference website for Azure infrastructure professionals, featuring
 | GET | `/api/schedule?format=csv` | Anonymous | Export as CSV |
 | POST | `/api/schedule` | Authenticated | Add new session |
 | POST | `/api/schedule?action=import` | Authenticated | Import from CSV |
+| POST | `/api/schedule?action=playlist` | Authenticated | Import from YouTube playlist |
 | PUT | `/api/schedule/{id}` | Authenticated | Update session |
 | DELETE | `/api/schedule/{id}` | Authenticated | Delete session |
 
@@ -228,6 +241,7 @@ func start
 ### Environment Variables
 
 - `STORAGE_ACCOUNT_NAME` - Azure Storage account name (default: `azcorestorage2026`)
+- `YOUTUBE_API_KEY` - (Optional) YouTube Data API v3 key for playlist imports
 
 ---
 
@@ -237,16 +251,17 @@ func start
 ├── index.html              # Main public website
 ├── admin.html              # Schedule admin dashboard
 ├── speakers-admin.html     # Speakers admin dashboard
-├── styles.css              # All CSS styles
+├── styles.css              # All CSS styles (consolidated)
 ├── staticwebapp.config.json # SWA routing and auth config
 ├── readme.md               # This file
 ├── api/
 │   ├── package.json        # Node.js dependencies
 │   ├── host.json           # Functions host config
 │   └── src/functions/
-│       ├── schedule.js     # Schedule CRUD + CSV import/export
+│       ├── schedule.js     # Schedule CRUD + CSV/Playlist import/export
 │       └── speakers.js     # Speakers CRUD + extract
 ├── assets/
+│   ├── acu-logo.png        # Conference logo
 │   └── Loading-Schedule.png # Placeholder image
 ├── images/
 │   └── speakers/           # Speaker headshot images
