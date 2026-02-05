@@ -440,8 +440,25 @@ async function importPlaylist(request, context) {
         const body = await request.json();
         const playlistId = body.playlistId;
         const apiKey = body.apiKey || process.env.YOUTUBE_API_KEY;
-        const startDate = body.startDate ? new Date(body.startDate) : new Date();
         const sessionDuration = body.sessionDuration || 60; // Default 60 minutes between sessions
+        const timezone = body.timezone || '-05:00'; // Default to EST if not provided
+        
+        // Parse startDate with the provided timezone offset
+        // datetime-local input sends format like "2026-02-05T10:00" without timezone
+        let startDate;
+        if (body.startDate) {
+            const dateStr = body.startDate;
+            // Check if the date string already has timezone info
+            if (dateStr.includes('Z') || dateStr.includes('+') || (dateStr.length > 10 && dateStr.includes('-', 10))) {
+                startDate = new Date(dateStr);
+            } else {
+                // Append the user-selected timezone offset
+                startDate = new Date(dateStr + timezone);
+                context.log(`Parsed startDate with timezone ${timezone}: ${dateStr}${timezone} -> ${startDate.toISOString()}`);
+            }
+        } else {
+            startDate = new Date();
+        }
         
         if (!playlistId) {
             return {

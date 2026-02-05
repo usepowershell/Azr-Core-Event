@@ -110,10 +110,30 @@
                 </div>
                 
                 <div class="form-group">
-                    <label for="start-date">First Session Start Time (Eastern Time) *</label>
+                    <label for="start-date">First Session Start Time *</label>
                     <input type="datetime-local" id="start-date" required>
                     <small style="color: #6c757d; display: block; margin-top: 4px;">
                         Videos will be scheduled sequentially starting from this time.
+                    </small>
+                </div>
+                
+                <div class="form-group">
+                    <label for="timezone">Your Timezone</label>
+                    <select id="timezone">
+                        <option value="-05:00">Eastern Standard Time (EST, UTC-5)</option>
+                        <option value="-04:00">Eastern Daylight Time (EDT, UTC-4)</option>
+                        <option value="-06:00">Central Standard Time (CST, UTC-6)</option>
+                        <option value="-05:00">Central Daylight Time (CDT, UTC-5)</option>
+                        <option value="-07:00">Mountain Standard Time (MST, UTC-7)</option>
+                        <option value="-06:00">Mountain Daylight Time (MDT, UTC-6)</option>
+                        <option value="-08:00">Pacific Standard Time (PST, UTC-8)</option>
+                        <option value="-07:00">Pacific Daylight Time (PDT, UTC-7)</option>
+                        <option value="+00:00">UTC</option>
+                        <option value="+01:00">Central European Time (CET, UTC+1)</option>
+                        <option value="+02:00">Central European Summer Time (CEST, UTC+2)</option>
+                    </select>
+                    <small style="color: #6c757d; display: block; margin-top: 4px;">
+                        Select the timezone for the start time above.
                     </small>
                 </div>
                 
@@ -571,6 +591,7 @@
             const playlistId = extractPlaylistId(playlistInput);
             const apiKey = document.getElementById('api-key').value.trim();
             const startDate = document.getElementById('start-date').value;
+            const timezone = document.getElementById('timezone').value;
             const sessionGap = parseInt(document.getElementById('session-gap').value) || 15;
             
             if (!playlistId) {
@@ -591,6 +612,7 @@
                 const requestBody = {
                     playlistId,
                     startDate,
+                    timezone,
                     sessionDuration: sessionGap
                 };
                 
