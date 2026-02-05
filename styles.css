@@ -347,6 +347,15 @@ section .section-subtitle {
   margin-right: auto;
 }
 
+/* About Section - Center everything */
+#about {
+  text-align: center;
+}
+
+#about .feature-card {
+  text-align: center;
+}
+
 /* Features Grid */
 .features-grid {
   display: grid;
