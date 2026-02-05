@@ -343,9 +343,11 @@
         
         function formatDescription(text) {
             if (!text) return '';
-            // Convert URLs to clickable links
-            return text.replace(
-                /(https?:\/\/[^\s]+)/g, 
+            // First, escape HTML to prevent XSS attacks
+            const escaped = escapeHtml(text);
+            // Then convert URLs to clickable links (now safe because HTML is escaped)
+            return escaped.replace(
+                /(https?:\/\/[^\s<]+)/g, 
                 '<a href="$1" target="_blank" rel="noopener">$1</a>'
             ).replace(/\n/g, '<br>');
         }
