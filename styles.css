@@ -356,6 +356,10 @@ section .section-subtitle {
   text-align: center;
 }
 
+#about .feature-card:last-child {
+  grid-column: 1 / -1;
+}
+
 /* Features Grid */
 .features-grid {
   display: grid;
