@@ -2,17 +2,19 @@
 
 A community conference website for Azure infrastructure professionals, featuring dynamic schedule management, YouTube video integration, and speaker profiles.
 
-**Live Site:** https://lemon-beach-0a645ad0f.4.azurestaticapps.net
+**Live Site:** <https://lemon-beach-0a645ad0f.4.azurestaticapps.net>
 
 ## Features
 
 ### Public Website (index.html)
 
 #### Hero & Navigation
+
 - Conference branding and tagline
 - Quick navigation to About, Schedule, Speakers, and Sponsors sections
 
 #### Video Player Section
+
 - **Embedded YouTube Player** - Automatically loads and plays the current session
 - **Live Stream Detection** - Shows "LIVE" badge when stream is broadcasting
 - **Now Playing Info Box** - Displays current session title, description, and YouTube link
@@ -20,6 +22,7 @@ A community conference website for Azure infrastructure professionals, featuring
 - **Live Chat Button** - Opens YouTube live chat in a popup window during streams
 
 #### Dynamic Schedule
+
 - Fetches sessions from Azure Table Storage API
 - Groups sessions by day with date headers
 - Clickable session cards open detailed modal with:
@@ -28,6 +31,7 @@ A community conference website for Azure infrastructure professionals, featuring
   - Direct YouTube link
 
 #### Featured Speakers Section
+
 - Dynamically loads speakers from API
 - Speaker cards with avatar (headshot or initials), name, title, and company
 - Hover effect with subtle lift animation
@@ -39,12 +43,14 @@ A community conference website for Azure infrastructure professionals, featuring
   - List of their sessions (clickable to open session details)
 
 #### Additional Sections
+
 - **About** - Event description and target audience with feature cards
 - **Sponsors** - Sponsor logos grid
 - **Code of Conduct** - Modal with community guidelines
 - **Footer** - Event info and links
 
 #### Accessibility & UX
+
 - Keyboard navigation (Escape to close modals)
 - Click outside modal to close
 - Responsive design for all screen sizes
@@ -57,6 +63,7 @@ A community conference website for Azure infrastructure professionals, featuring
 **Authentication:** Requires Azure AD login (configured in staticwebapp.config.json)
 
 #### Schedule Management
+
 - **View All Sessions** - Table with title, video ID, date/time, duration, and actions
 - **Add Session** - Form with video ID, title, description, start time, and duration
 - **Edit Session** - Inline editing of any session field
@@ -64,6 +71,7 @@ A community conference website for Azure infrastructure professionals, featuring
 - **Multi-Select Delete** - Checkbox selection for bulk deletion
 
 #### CSV Export/Import
+
 - **Export to CSV** - Downloads schedule as RFC 4180 compliant CSV
   - Excel formula protection (prefixes dangerous characters with single quote)
   - Handles multi-line descriptions and special characters
@@ -73,6 +81,7 @@ A community conference website for Azure infrastructure professionals, featuring
   - Reports success/error counts
 
 #### Navigation
+
 - Link to Speakers Admin
 - Return to main site
 
@@ -83,6 +92,7 @@ A community conference website for Azure infrastructure professionals, featuring
 **Authentication:** Requires Azure AD login
 
 #### Speaker Management
+
 - **View All Speakers** - Card grid with avatar, name, title, company, and social links
 - **Add Speaker** - Form with:
   - Name, title, company
@@ -95,6 +105,7 @@ A community conference website for Azure infrastructure professionals, featuring
 - **Headshot Preview** - Shows image preview when filename is entered
 
 #### Extract Speakers
+
 - **Auto-Extract from Schedule** - Parses session descriptions for "Speaker:" patterns
 - Automatically creates speaker entries with linked sessions
 - Updates existing speakers with new session links
@@ -116,6 +127,7 @@ A community conference website for Azure infrastructure professionals, featuring
 ### Data Storage (Azure Table Storage)
 
 #### VideoSchedule Table
+
 | Field | Type | Description |
 |-------|------|-------------|
 | partitionKey | string | Date (YYYY-MM-DD) |
@@ -128,6 +140,7 @@ A community conference website for Azure infrastructure professionals, featuring
 | duration | number | Duration in minutes |
 
 #### Speakers Table
+
 | Field | Type | Description |
 |-------|------|-------------|
 | partitionKey | string | "speaker" |
@@ -184,6 +197,7 @@ A community conference website for Azure infrastructure professionals, featuring
 **Trigger:** Push to `main` branch (paths: `api/**`) or manual dispatch
 
 **Steps:**
+
 1. Checkout repository
 2. Setup Node.js 20.x
 3. Install production dependencies only (`npm install --omit=dev`)
@@ -198,11 +212,13 @@ A community conference website for Azure infrastructure professionals, featuring
 ## Local Development
 
 ### Prerequisites
+
 - Node.js 20.x
 - Azure CLI (logged in)
 - Azure Functions Core Tools
 
 ### Running the API Locally
+
 ```bash
 cd api
 npm install
@@ -210,6 +226,7 @@ func start
 ```
 
 ### Environment Variables
+
 - `STORAGE_ACCOUNT_NAME` - Azure Storage account name (default: `azcorestorage2026`)
 
 ---

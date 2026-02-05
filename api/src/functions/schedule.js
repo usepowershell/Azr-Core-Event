@@ -434,6 +434,139 @@ async function importScheduleFromCsv(request, context) {
     }
 }
 
+// POST /api/schedule?action=playlist - Import from YouTube playlist
+async function importPlaylist(request, context) {
+    try {
+        const body = await request.json();
+        const playlistId = body.playlistId;
+        const apiKey = body.apiKey || process.env.YOUTUBE_API_KEY;
+        const startDate = body.startDate ? new Date(body.startDate) : new Date();
+        const sessionDuration = body.sessionDuration || 60; // Default 60 minutes between sessions
+        
+        if (!playlistId) {
+            return {
+                status: 400,
+                jsonBody: { error: "playlistId is required" }
+            };
+        }
+        
+        if (!apiKey) {
+            return {
+                status: 400,
+                jsonBody: { error: "YouTube API key is required. Provide apiKey in request or set YOUTUBE_API_KEY environment variable." }
+            };
+        }
+        
+        context.log("Importing playlist:", playlistId);
+        
+        // Fetch playlist items from YouTube API
+        const playlistItems = [];
+        let nextPageToken = null;
+        
+        do {
+            const url = `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet,contentDetails&maxResults=50&playlistId=${playlistId}&key=${apiKey}${nextPageToken ? `&pageToken=${nextPageToken}` : ''}`;
+            
+            const response = await fetch(url);
+            if (!response.ok) {
+                const error = await response.json();
+                context.log("YouTube API error:", error);
+                return {
+                    status: 400,
+                    jsonBody: { error: "Failed to fetch playlist from YouTube", details: error.error?.message || "Unknown error" }
+                };
+            }
+            
+            const data = await response.json();
+            playlistItems.push(...data.items);
+            nextPageToken = data.nextPageToken;
+        } while (nextPageToken);
+        
+        context.log(`Found ${playlistItems.length} videos in playlist`);
+        
+        // Get video details for duration
+        const videoIds = playlistItems.map(item => item.contentDetails.videoId).join(',');
+        const videosUrl = `https://www.googleapis.com/youtube/v3/videos?part=contentDetails,snippet&id=${videoIds}&key=${apiKey}`;
+        const videosResponse = await fetch(videosUrl);
+        const videosData = await videosResponse.json();
+        
+        // Create a map of video durations
+        const videoDurations = {};
+        for (const video of videosData.items || []) {
+            // Parse ISO 8601 duration (PT1H2M3S)
+            const duration = video.contentDetails.duration;
+            let seconds = 0;
+            const hours = duration.match(/(\d+)H/);
+            const minutes = duration.match(/(\d+)M/);
+            const secs = duration.match(/(\d+)S/);
+            if (hours) seconds += parseInt(hours[1]) * 3600;
+            if (minutes) seconds += parseInt(minutes[1]) * 60;
+            if (secs) seconds += parseInt(secs[1]);
+            videoDurations[video.id] = seconds;
+        }
+        
+        // Create schedule items
+        const client = getTableClient();
+        const results = { created: 0, skipped: 0, errors: [], videos: [] };
+        let currentTime = new Date(startDate);
+        
+        for (const item of playlistItems) {
+            try {
+                const videoId = item.contentDetails.videoId;
+                const snippet = item.snippet;
+                
+                // Skip private or deleted videos
+                if (snippet.title === 'Private video' || snippet.title === 'Deleted video') {
+                    results.skipped++;
+                    continue;
+                }
+                
+                const sessionId = generateSessionId();
+                const partitionKey = currentTime.toISOString().split('T')[0];
+                const duration = videoDurations[videoId] || 0;
+                
+                const entity = {
+                    partitionKey: partitionKey,
+                    rowKey: sessionId,
+                    videoId: videoId,
+                    title: snippet.title,
+                    description: snippet.description || '',
+                    url: `https://www.youtube.com/watch?v=${videoId}`,
+                    startTime: currentTime.toISOString(),
+                    duration: duration
+                };
+                
+                await client.createEntity(entity);
+                results.created++;
+                results.videos.push({ title: snippet.title, videoId, startTime: currentTime.toISOString() });
+                
+                // Move to next time slot (use video duration + gap, or sessionDuration)
+                const nextGap = duration > 0 ? duration + (sessionDuration * 60) : sessionDuration * 60;
+                currentTime = new Date(currentTime.getTime() + nextGap * 1000);
+                
+            } catch (itemError) {
+                results.errors.push(`${item.snippet?.title || 'Unknown'}: ${itemError.message}`);
+            }
+        }
+        
+        return {
+            status: 200,
+            jsonBody: {
+                message: "Playlist import completed",
+                created: results.created,
+                skipped: results.skipped,
+                errors: results.errors,
+                videos: results.videos
+            }
+        };
+    } catch (error) {
+        context.log("Error importing playlist:", error);
+        return {
+            status: 500,
+            jsonBody: { error: "Failed to import playlist", details: error.message }
+        };
+    }
+}
+
 // Helper to handle request wrapper for v4
 function wrapRequest(request, id) {
     return {
@@ -472,6 +605,9 @@ app.http("addScheduleItem", {
         if (action === 'import') {
             return importScheduleFromCsv(wrapRequest(request), context);
         }
+        if (action === 'playlist') {
+            return importPlaylist(wrapRequest(request), context);
+        }
         return addScheduleItem(wrapRequest(request), context);
     }
 });
@@ -502,5 +638,6 @@ module.exports = {
     updateScheduleItem,
     deleteScheduleItem,
     exportScheduleAsCsv,
-    importScheduleFromCsv
+    importScheduleFromCsv,
+    importPlaylist
 };

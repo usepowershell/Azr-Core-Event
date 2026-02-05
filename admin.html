@@ -22,6 +22,7 @@
         
         <div style="display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 20px; align-items: center;">
             <button class="btn btn-primary" onclick="openAddModal()">+ Add Schedule Item</button>
+            <button class="btn btn-success" onclick="openPlaylistModal()">📺 Import YouTube Playlist</button>
             <button class="btn btn-secondary" onclick="exportSchedule()">📥 Export CSV</button>
             <button class="btn btn-secondary" onclick="document.getElementById('import-file').click()">📤 Import CSV</button>
             <input type="file" id="import-file" accept=".csv" style="display: none;" onchange="importSchedule(event)">
@@ -79,6 +80,59 @@
                 <div class="form-actions">
                     <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
                     <button type="submit" class="btn btn-primary">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Playlist Import Modal -->
+    <div id="playlist-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Import YouTube Playlist</h2>
+                <button class="close-btn" onclick="closePlaylistModal()">&times;</button>
+            </div>
+            <form id="playlist-form" onsubmit="importPlaylist(event)">
+                <div class="form-group">
+                    <label for="playlist-id">YouTube Playlist ID or URL *</label>
+                    <input type="text" id="playlist-id" required placeholder="e.g., PLxxxxxx or https://www.youtube.com/playlist?list=PLxxxxxx">
+                    <small style="color: #6c757d; display: block; margin-top: 4px;">
+                        You can paste the full playlist URL or just the playlist ID.
+                    </small>
+                </div>
+                
+                <div class="form-group">
+                    <label for="api-key">YouTube API Key *</label>
+                    <input type="password" id="api-key" required placeholder="Your YouTube Data API v3 key">
+                    <small style="color: #6c757d; display: block; margin-top: 4px;">
+                        Get a free API key from <a href="https://console.developers.google.com/" target="_blank" style="color: var(--primary-2);">Google Cloud Console</a>. Enable the YouTube Data API v3.
+                    </small>
+                </div>
+                
+                <div class="form-group">
+                    <label for="start-date">First Session Start Time (Eastern Time) *</label>
+                    <input type="datetime-local" id="start-date" required>
+                    <small style="color: #6c757d; display: block; margin-top: 4px;">
+                        Videos will be scheduled sequentially starting from this time.
+                    </small>
+                </div>
+                
+                <div class="form-group">
+                    <label for="session-gap">Gap Between Sessions (minutes)</label>
+                    <input type="number" id="session-gap" min="0" value="15" placeholder="Minutes between end of one video and start of next">
+                    <small style="color: #6c757d; display: block; margin-top: 4px;">
+                        Time to add between the end of one video and the start of the next.
+                    </small>
+                </div>
+                
+                <div id="playlist-preview" style="display: none; margin: 20px 0; padding: 16px; background: var(--card); border-radius: 8px;">
+                    <h4 style="margin: 0 0 12px; color: var(--primary-2);">Import Progress</h4>
+                    <div id="playlist-status"></div>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closePlaylistModal()">Cancel</button>
+                    <button type="submit" class="btn btn-success" id="import-playlist-btn">📺 Import Playlist</button>
                 </div>
             </form>
         </div>
@@ -475,6 +529,127 @@
             }
             
             loadSchedule();
+        }
+        
+        // Open playlist import modal
+        function openPlaylistModal() {
+            document.getElementById('playlist-modal').classList.add('active');
+            document.getElementById('playlist-preview').style.display = 'none';
+            document.getElementById('playlist-form').reset();
+            
+            // Set default start date to tomorrow at 9 AM
+            const tomorrow = new Date();
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            tomorrow.setHours(9, 0, 0, 0);
+            document.getElementById('start-date').value = tomorrow.toISOString().slice(0, 16);
+        }
+        
+        // Close playlist import modal
+        function closePlaylistModal() {
+            document.getElementById('playlist-modal').classList.remove('active');
+        }
+        
+        // Extract playlist ID from URL or raw ID
+        function extractPlaylistId(input) {
+            if (!input) return null;
+            
+            // If it looks like a URL, extract the list parameter
+            if (input.includes('youtube.com') || input.includes('youtu.be')) {
+                const match = input.match(/[?&]list=([^&]+)/);
+                if (match) return match[1];
+            }
+            
+            // Otherwise, assume it's a raw playlist ID
+            return input.trim();
+        }
+        
+        // Import YouTube playlist
+        async function importPlaylist(event) {
+            event.preventDefault();
+            
+            const playlistInput = document.getElementById('playlist-id').value;
+            const playlistId = extractPlaylistId(playlistInput);
+            const apiKey = document.getElementById('api-key').value.trim();
+            const startDate = document.getElementById('start-date').value;
+            const sessionGap = parseInt(document.getElementById('session-gap').value) || 15;
+            
+            if (!playlistId) {
+                showMessage('Please enter a valid playlist ID or URL.', 'error');
+                return;
+            }
+            
+            if (!apiKey) {
+                showMessage('Please enter your YouTube API key.', 'error');
+                return;
+            }
+            
+            const previewDiv = document.getElementById('playlist-preview');
+            const statusDiv = document.getElementById('playlist-status');
+            const importBtn = document.getElementById('import-playlist-btn');
+            
+            previewDiv.style.display = 'block';
+            statusDiv.innerHTML = '<p>🔄 Fetching playlist from YouTube...</p>';
+            importBtn.disabled = true;
+            importBtn.textContent = 'Importing...';
+            
+            try {
+                const response = await fetch('/api/schedule?action=playlist', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        playlistId,
+                        apiKey,
+                        startDate,
+                        sessionDuration: sessionGap
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(result.error || result.details || 'Import failed');
+                }
+                
+                let statusHtml = `<p style="color: #22c55e;">✅ Successfully imported ${result.created} videos!</p>`;
+                
+                if (result.skipped > 0) {
+                    statusHtml += `<p style="color: var(--muted);">⏭️ Skipped ${result.skipped} private/deleted videos</p>`;
+                }
+                
+                if (result.errors && result.errors.length > 0) {
+                    statusHtml += `<p style="color: #ef4444;">⚠️ ${result.errors.length} errors:</p>`;
+                    statusHtml += `<ul style="color: #ef4444; font-size: 12px; max-height: 100px; overflow-y: auto;">`;
+                    result.errors.forEach(err => {
+                        statusHtml += `<li>${err}</li>`;
+                    });
+                    statusHtml += '</ul>';
+                }
+                
+                if (result.videos && result.videos.length > 0) {
+                    statusHtml += `<p style="margin-top: 12px; color: var(--muted);">Imported videos:</p>`;
+                    statusHtml += `<ul style="font-size: 12px; max-height: 150px; overflow-y: auto; color: var(--text);">`;
+                    result.videos.slice(0, 20).forEach(v => {
+                        const time = new Date(v.startTime).toLocaleString();
+                        statusHtml += `<li><strong>${v.title}</strong> - ${time}</li>`;
+                    });
+                    if (result.videos.length > 20) {
+                        statusHtml += `<li>... and ${result.videos.length - 20} more</li>`;
+                    }
+                    statusHtml += '</ul>';
+                }
+                
+                statusDiv.innerHTML = statusHtml;
+                showMessage(`Playlist imported: ${result.created} videos added!`);
+                loadSchedule();
+                
+            } catch (error) {
+                console.error('Error importing playlist:', error);
+                statusDiv.innerHTML = `<p style="color: #ef4444;">❌ Error: ${error.message}</p>`;
+                showMessage(`Failed to import playlist: ${error.message}`, 'error');
+            } finally {
+                importBtn.disabled = false;
+                importBtn.textContent = '📺 Import Playlist';
+            }
         }
         
         // Initialize
